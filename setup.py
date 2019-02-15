@@ -1,9 +1,12 @@
 
+import io
 from setuptools import setup
 
 setup(name='liftover',
     description='Package for converting between genome build coordinates',
-    version='1.0.0',
+    long_description=io.open('README.md', encoding='utf-8').read(),
+    long_description_content_type='text/markdown',
+    version='1.0.1',
     author='Jeremy McRae',
     author_email='jmcrae@illumina.com',
     url='https://github.com/jeremy_mcrae/liftover',
