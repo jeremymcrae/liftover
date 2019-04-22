@@ -8,12 +8,14 @@ class ChainFile(object):
     ''' open a chain file for coordinate conversion
     '''
     def __init__(self, handle, target, query):
-        self.handle = handle
+        self._handle = handle
         self.target = target
         self.query = query
         self.chains = defaultdict(Target)
         for x in self:
             self.chains[x.target_id].add_chain(x)
+        self._handle.close()
+        del self._handle
     
     def __repr__(self):
         return 'liftover({}->{})'.format(self.target, self.query)
@@ -23,7 +25,7 @@ class ChainFile(object):
         ''' get the text lines for a complete chain
         '''
         lines = []
-        for line in self.handle:
+        for line in self._handle:
             if line.startswith('#'):  # skip comment lines
                 continue
             if line == '\n':  # end chain data at blank lines
