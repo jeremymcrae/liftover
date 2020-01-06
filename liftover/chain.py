@@ -42,7 +42,7 @@ class Chain(object):
             (size, delta_reference, delta_query) tuple. Last line's deltas = 0.
         '''
         try:
-            size, delta_t, delta_q = map(int, line.strip('\n').split('\t'))
-            return size, delta_t, delta_q
+            size, delta_t, delta_q = line.strip('\n').split('\t')
+            return int(size), int(delta_t), int(delta_q)
         except ValueError:
             return int(line.strip('\n')), 0, 0
