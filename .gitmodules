@@ -1,0 +1,3 @@
+[submodule "intervaltree"]
+	path = intervaltree
+	url = https://github.com/ekg/intervaltree
