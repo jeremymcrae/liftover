@@ -1,6 +1,6 @@
 [submodule "intervaltree"]
-	path = intervaltree
+	path = src/intervaltree
 	url = https://github.com/ekg/intervaltree
 [submodule "gzstream"]
-	path = gzstream
+	path = src/gzstream
 	url = https://github.com/kanedo/gzstream
