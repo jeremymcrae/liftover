@@ -6,7 +6,7 @@
 #include "headers.h"
 #include "chain.h"
 
-#include "../intervaltree/IntervalTree.h"
+#include "intervaltree/IntervalTree.h"
 
 namespace liftover {
 
