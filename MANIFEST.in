@@ -1,0 +1,10 @@
+# liftover code
+include MANIFEST.in
+include liftover/*.cpp
+include liftover/*.py
+include liftover/*.pyx
+include src/*.h
+include src/*.cpp
+include src/gzstream/gzstream.C
+include src/gzstream/gztream.h
+include src/intervaltree/intervaltree.h
