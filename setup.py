@@ -1,6 +1,30 @@
 
 import io
 from setuptools import setup
+import sys
+from distutils.core import Extension
+from Cython.Build import cythonize
+
+EXTRA_COMPILE_ARGS = ['-std=c++11']
+
+if sys.platform == 'darwin':
+    EXTRA_COMPILE_ARGS += ['-stdlib=libc++']
+
+lifter = cythonize([
+    Extension('liftover.chain_file',
+        extra_compile_args=EXTRA_COMPILE_ARGS,
+        sources=['liftover/chain_file.pyx',
+            'src/gzstream/gzstream.C',
+            'src/chain.cpp',
+            'src/utils.cpp',
+            'src/headers.cpp',
+            'src/target.cpp',
+            'src/chain_file.cpp'],
+        include_dirs=['src/', 'src/gzstream/', 'src/intervaltree/'],
+        library_dirs=['src/', 'src/gzstream/', 'src/intervaltree/'],
+        libraries=['z'],
+        language='c++'),
+    ])
 
 setup(name='liftover',
     description='Package for converting between genome build coordinates',
@@ -11,10 +35,11 @@ setup(name='liftover',
     author_email='jmcrae@illumina.com',
     url='https://github.com/jeremymcrae/liftover',
     packages=['liftover'],
-    install_requires=['intervaltree',
-        'requests',
+    install_requires=['requests',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
-    ])
+    ],
+    ext_modules=lifter,
+    )

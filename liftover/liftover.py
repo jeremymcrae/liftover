@@ -1,6 +1,5 @@
 
 import os
-import gzip
 
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
@@ -34,5 +33,4 @@ def get_lifter(target, query, cache=None):
         url = 'http://hgdownload.cse.ucsc.edu/goldenPath/{}/liftOver/{}'.format(target, basename)
         download_file(url, chain_path)
     
-    with gzip.open(chain_path, 'rt') as handle:
-        return ChainFile(handle, target, query)
+    return ChainFile(chain_path, target, query)
