@@ -6,5 +6,5 @@ include liftover/*.pyx
 include src/*.h
 include src/*.cpp
 include src/gzstream/gzstream.C
-include src/gzstream/gztream.h
+include src/gzstream/gzstream.h
 include src/intervaltree/IntervalTree.h
