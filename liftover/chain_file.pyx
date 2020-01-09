@@ -63,10 +63,13 @@ cdef class ChainFile():
     def __repr__(self):
         return f'liftover({self.target_id}->{self.query_id})'
 
-    def __getitem__(self, chrom):
+    def __getitem__(self, contig):
         ''' get the Target object for a target chromosome
         '''
-        return self.targets[chrom]
+        try:
+            return self.targets[contig]
+        except KeyError:
+            return self.targets[f'chr{contig}']
 
     def query(self, chrom, long pos):
         '''  find the coordinate matches for a genome position
