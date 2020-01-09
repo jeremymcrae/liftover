@@ -5,7 +5,7 @@ Inspired by [pyliftover](https://github.com/konstantint/pyliftover), this
 offers a few advantages:
  - ~5X faster, and lower memory requirements, as loading the chain file and
    converting coordinates is implemented in c++.
- - dictionary style conversion, as in access converted coordinates via  
+ - dictionary style conversion, as in access converted coordinates via
    `converter[chrom][pos]`
 
 ### Installation
