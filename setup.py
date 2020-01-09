@@ -6,13 +6,15 @@ from distutils.core import Extension
 from Cython.Build import cythonize
 
 EXTRA_COMPILE_ARGS = ['-std=c++11']
-
-if sys.platform == 'darwin':
-    EXTRA_COMPILE_ARGS += ['-stdlib=libc++']
+EXTRA_LINK_ARGS = []
+if sys.platform == "darwin":
+    EXTRA_COMPILE_ARGS += ["-stdlib=libc++", "-mmacosx-version-min=10.9"]
+    EXTRA_LINK_ARGS += ["-stdlib=libc++", "-mmacosx-version-min=10.9"]
 
 lifter = cythonize([
     Extension('liftover.chain_file',
         extra_compile_args=EXTRA_COMPILE_ARGS,
+        extra_link_args=EXTRA_LINK_ARGS,
         sources=['liftover/chain_file.pyx',
             'src/gzstream/gzstream.C',
             'src/chain.cpp',
