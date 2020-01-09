@@ -7,4 +7,4 @@ include src/*.h
 include src/*.cpp
 include src/gzstream/gzstream.C
 include src/gzstream/gztream.h
-include src/intervaltree/intervaltree.h
+include src/intervaltree/IntervalTree.h
