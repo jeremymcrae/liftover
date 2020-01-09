@@ -1,10 +1,12 @@
 ### python liftover utility
 
 Converts point coordinates between genome assemblies.
-Inspired by [pyliftover](https://github.com/konstantint/pyliftover), the primary
-advantage this offers is dictionary style conversion, as in access converted
-coordinates via `converter[chrom][pos]`.
-
+Inspired by [pyliftover](https://github.com/konstantint/pyliftover), this
+offers a few advantages:
+ - ~5X faster, and lower memory requirements, as loading the chain file and
+   converting coordinates is implemented in c++.
+ - dictionary style conversion, as in access converted coordinates via  
+   `converter[chrom][pos]`
 
 ### Installation
 Install via pip: `pip install liftover`
