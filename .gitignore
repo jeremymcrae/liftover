@@ -3,6 +3,7 @@ __pycache__/
 dist/
 build/
 liftover/*.cpp
+liftover/*.so
 *.egg
 *.egg-info/
 *.DS_Store
