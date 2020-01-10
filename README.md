@@ -1,3 +1,5 @@
+![travis](https://travis-ci.org/jeremymcrae/liftover.svg?branch=master)
+
 ### python liftover utility
 
 Converts point coordinates between genome assemblies.
