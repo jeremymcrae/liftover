@@ -26,6 +26,7 @@ def get_lifter(target, query, cache=None):
         os.mkdir(cache)
     
     query = query[0].upper() + query[1:]
+    target = target[0].lower() + target[1:]
     basename = '{}To{}.over.chain.gz'.format(target, query)
     chain_path = os.path.join(cache, basename)
     
