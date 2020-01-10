@@ -26,6 +26,9 @@ std::vector<Match> Target::query(long pos) {
   */
   std::vector<Match> matches;
   for (auto region : tree.findOverlapping(pos, pos)) {
+    if (pos == region.stop) {
+      continue;
+    }
     Mapped mapped = region.value;
     long offset = pos - region.start;
     long remapped = mapped.start + offset;
