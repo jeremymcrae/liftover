@@ -6,10 +6,6 @@ from libcpp.map cimport map
 from libcpp cimport bool
 from cython.operator cimport dereference as deref
 
-cdef extern from 'chain.h' namespace 'liftover':
-  cdef cppclass Chain:
-    Chain(vector[string]) except +
-
 cdef extern from 'target.h' namespace 'liftover':
   cdef struct Match:
     string contig
@@ -17,7 +13,6 @@ cdef extern from 'target.h' namespace 'liftover':
     bool fwd_strand
   
   cdef cppclass Target:
-    Target(vector[Chain]) except +
     Target() except +
     vector[Match] query(int)
     vector[Match] operator[](int)
