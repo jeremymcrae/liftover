@@ -2,6 +2,7 @@
 #define LIFTOVER_CHAIN_H
 
 #include <vector>
+#include <sstream>
 
 #include "headers.h"
 // #include "utils.h"
@@ -24,7 +25,7 @@ struct Coords {
   Mapped data;
 };
 
-std::vector<long> parse(std::string line);
+inline void parse(std::string & line, long * coords);
 
 class Chain {
   // class to hold all the regions for a single chain

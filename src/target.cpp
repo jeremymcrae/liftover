@@ -3,7 +3,7 @@
 
 namespace liftover {
 
-Target::Target(std::vector<Chain> chains) {
+Target::Target(std::vector<Chain> & chains) {
   /* make set of targets for a single chromosome
   
   This uses a vector of chains, all for a given chromosome, and builds an
@@ -11,6 +11,11 @@ Target::Target(std::vector<Chain> chains) {
   */
   target_id = chains[0].target_id;
   Tree::interval_vector intervals;
+  
+  int size = 0;
+  for (auto chain : chains) { size += chain.intervals.size(); }
+  intervals.reserve(size);
+  
   // make intervals for the tree from all regions in all chains
   for (auto chain : chains) {
     for (auto ival: chain.intervals) {

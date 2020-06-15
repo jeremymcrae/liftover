@@ -31,7 +31,7 @@ class Target {
   Tree tree;
   std::string target_id;
 public:
-  Target(std::vector<Chain> chains);
+  Target(std::vector<Chain> & chains);
   Target() {};
   std::vector<Match> query(long pos);
   std::vector<Match> operator[](long pos) {return query(pos);};
