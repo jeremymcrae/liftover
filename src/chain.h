@@ -32,7 +32,7 @@ class Chain {
 public:
   std::vector<Coords> intervals;
   std::string target_id;
-  Chain(std::vector<std::string> lines);
+  Chain(std::vector<std::string> & lines);
   Chain() {};
 };
 
