@@ -11,17 +11,17 @@ std::map<std::string, Target> open_chainfile(std::string path) {
   */
   igzstream infile(path.c_str());
   std::string line;
-  std::vector<std::string> lines;
   std::map<std::string, std::vector<Chain>> chains;
+  Chain chain;
   while (std::getline(infile, line)) {
     if (line[0] == '#') { continue; } // skip comment lines
     
-    if (line.empty()) { // finish existing chain at blank lines
-      Chain chain = Chain(lines);
+    if (line.substr(0, 5) == "chain") {
+      chain = Chain(line);
+    } else if (line.empty()) { // finish existing chain at blank lines
       chains[chain.target_id].push_back(chain);
-      lines.clear();
     } else {
-      lines.push_back(line);
+      chain.add_line(line);
     }
   }
   

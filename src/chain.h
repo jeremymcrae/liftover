@@ -29,11 +29,24 @@ inline void parse(std::string & line, long * coords);
 
 class Chain {
   // class to hold all the regions for a single chain
+  long target;
+  long query;
+  std::string query_id;
+  std::string query_strand;
+  long query_size;
+  long target_end;
+  long query_end;
+  
+  long size;
+  long target_gap;
+  long query_gap;
 public:
   std::vector<Coords> intervals;
   std::string target_id;
-  Chain(std::vector<std::string> & lines);
+  
   Chain() {};
+  Chain(std::string & header_line);
+  void add_line(std::string & line);
 };
 
 

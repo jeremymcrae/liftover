@@ -30,38 +30,35 @@ inline void parse(std::string & line, long & size, long & target_gap, long & que
   }
 }
 
-Chain::Chain(std::vector<std::string> & lines) {
+Chain::Chain(std::string & header_line) {
+  ChainHeader header = process_header(header_line);
+  target_id = header.target_id;
+  target = header.target_start;
+  query_id = header.query_id;
+  query = header.query_start;
+  query_strand = header.query_strand;
+  query_size = header.query_size;
+  target_end = header.target_end;
+  query_end = header.query_end;
+}
+
+void Chain::add_line(std::string & line) {
   /* build a set of Intervals for mapping betwen coordinates.
   
   This uses the lines for a single chain. Chains for a single chromosome are
   collected together at a later stage.
   */
-  ChainHeader header = process_header(lines[0]);
-  lines.erase(lines.begin());
-  intervals.resize(lines.size());
+  parse(line, size, target_gap, query_gap);
   
-  target_id = header.target_id;
-  long target = header.target_start;
-  long query = header.query_start;
+  Mapped data = Mapped {query, query + size, query_id,
+    query_strand == "+", query_size};
+  intervals.push_back( Coords {target, target + size, data} );
   
-  long size;
-  long target_gap;
-  long query_gap;
+  target += size + target_gap;
+  query += size + query_gap;
   
-  int i = 0;
-  for (auto & line: lines) {
-    parse(line, size, target_gap, query_gap);
-    
-    Mapped data = Mapped {query, query + size, header.query_id,
-      header.query_strand == "+", header.query_size};
-    intervals[i] = Coords {target, target + size, data};
-    i += 1;
-    
-    target += size + target_gap;
-    query += size + query_gap;
-  }
-  assert(target == header.target_end);
-  assert(query == header.query_end);
+  assert(target == target_end);
+  assert(query == query_end);
 }
 
 }  // namespace
