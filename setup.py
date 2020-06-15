@@ -37,7 +37,7 @@ setup(name='liftover',
     author_email='jmcrae@illumina.com',
     url='https://github.com/jeremymcrae/liftover',
     packages=['liftover'],
-    install_requires=['cython',
+    install_requires=[
         'requests',
     ],
     classifiers=[
