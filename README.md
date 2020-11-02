@@ -1,4 +1,4 @@
-![travis](https://travis-ci.org/jeremymcrae/liftover.svg?branch=master)
+![liftover](https://github.com/jeremymcrae/liftover/workflows/liftover/badge.svg)
 
 ### python liftover utility
 
