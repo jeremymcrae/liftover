@@ -39,7 +39,7 @@ cdef class PyTarget():
 cdef class ChainFile():
     cdef string target_id
     cdef string query_id
-    targets = {}
+    cdef targets
     def __cinit__(self, path, target, query):
         self.target_id = target.encode('utf8')
         self.query_id = query.encode('utf8')
@@ -48,6 +48,7 @@ cdef class ChainFile():
         # dictionary, as accessing this is much faster than converting the
         # c++ Target object each time we query in a chromosome.
         path = path.encode('utf8')
+        self.targets = {}
         cdef map[string, Target] chainfile = open_chainfile(path)
         for x in chainfile:
             chrom = x.first.decode('utf8')
