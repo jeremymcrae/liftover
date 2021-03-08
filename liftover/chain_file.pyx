@@ -11,7 +11,7 @@ cdef extern from 'target.h' namespace 'liftover':
     string contig
     long pos
     bool fwd_strand
-  
+
   cdef cppclass Target:
     Target() except +
     vector[Match] query(int)
@@ -34,7 +34,7 @@ cdef class PyTarget():
             contig = x.contig.decode('utf8')
             strand = '+' if x.fwd_strand else '-'
             return [(contig, x.pos, strand)]
-        
+
         matches = []
         for x in cpp_matches:
             contig = x.contig.decode('utf8')
@@ -49,7 +49,7 @@ cdef class ChainFile():
     def __cinit__(self, path, target, query):
         self.target_id = target.encode('utf8')
         self.query_id = query.encode('utf8')
-        
+
         # open the chainfile and move the chromosome mappings to a python
         # dictionary, as accessing this is much faster than converting the
         # c++ Target object each time we query in a chromosome.
@@ -77,7 +77,7 @@ cdef class ChainFile():
         '''  find the coordinate matches for a genome position
         '''
         return self[chrom][pos]
-    
+
     def convert_coordinate(self, chrom, long pos):
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''

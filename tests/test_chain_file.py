@@ -5,6 +5,7 @@ from pathlib import Path
 
 from liftover import get_lifter
 
+
 class TestChainFile(unittest.TestCase):
     ''' unittest the lifting operations
     '''
@@ -14,7 +15,7 @@ class TestChainFile(unittest.TestCase):
 
     def test_points(self):
         ''' compare to conversions found using UCSC liftover webtool
-        
+
         There is a file of test cases in the test/data folder, which has the
         boundaries in the hg19 to hg38 chain file. For each region in the chain
         file these sites were included:
@@ -30,7 +31,7 @@ class TestChainFile(unittest.TestCase):
             for line in handle:
                 chrom, pos, lft_chrom, lft_pos = line.strip('\n').split('\t')
                 pos, lft_pos = int(pos), int(lft_pos)
-                
+
                 lifted = self.lifter[chrom][pos]
                 if lft_chrom == '-':
                     self.assertEqual(lifted, [])
