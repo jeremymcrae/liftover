@@ -77,3 +77,8 @@ cdef class ChainFile():
         '''  find the coordinate matches for a genome position
         '''
         return self[chrom][pos]
+    
+    def convert_coordinate(self, chrom, long pos):
+        '''  find the coordinate matches for a genome position (from pyliftover API)
+        '''
+        return self[chrom][pos]
