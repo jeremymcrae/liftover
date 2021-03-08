@@ -1,6 +1,8 @@
 
 #include "target.h"
 
+#include <iostream>
+
 namespace liftover {
 
 Target::Target(std::vector<Chain> & chains) {
@@ -29,10 +31,9 @@ Target::Target(std::vector<Chain> & chains) {
 std::vector<Match> Target::query(long pos) {
   /* find coordinates matching a specific site
   */
-  auto matched = tree.findOverlapping(pos, pos);
-  std::vector<Match> matches(matched.size());
-  for (uint i=0; i<matched.size(); i++) {
-    auto & region = matched[i];
+  std::vector<Match> matches;
+  matches.reserve(1);
+  for (auto & region : tree.findOverlapping(pos, pos)) {
     if (pos == region.stop) {
       continue;
     }
@@ -42,7 +43,7 @@ std::vector<Match> Target::query(long pos) {
     if (!mapped.fwd_strand) {
       remapped = mapped.size - remapped - 1;
     }
-    matches[i] = Match {mapped.query_id, remapped, mapped.fwd_strand};
+    matches.push_back( Match {mapped.query_id, remapped, mapped.fwd_strand});
   }
   return matches;
 }
