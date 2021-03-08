@@ -4,8 +4,6 @@ import os
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
-import requests
-
 def get_lifter(target, query, cache=None):
     ''' create a converter to map between genome builds
     
