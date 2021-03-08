@@ -24,10 +24,17 @@ cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
     '''
     cdef Target thisptr
+    cdef Match x
     cdef set_target(self, Target target):
         self.thisptr = target
     def __getitem__(self, long pos):
         cpp_matches = self.thisptr[pos]
+        if cpp_matches.size() == 1:
+            x = cpp_matches[0]
+            contig = x.contig.decode('utf8')
+            strand = '+' if x.fwd_strand else '-'
+            return [(contig, x.pos, strand)]
+        
         matches = []
         for x in cpp_matches:
             contig = x.contig.decode('utf8')
