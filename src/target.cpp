@@ -29,18 +29,20 @@ Target::Target(std::vector<Chain> & chains) {
 std::vector<Match> Target::query(long pos) {
   /* find coordinates matching a specific site
   */
-  std::vector<Match> matches;
-  for (auto region : tree.findOverlapping(pos, pos)) {
+  auto matched = tree.findOverlapping(pos, pos);
+  std::vector<Match> matches(matched.size());
+  for (uint i=0; i<matched.size(); i++) {
+    auto & region = matched[i];
     if (pos == region.stop) {
       continue;
     }
-    Mapped mapped = region.value;
+    Mapped & mapped = region.value;
     long offset = pos - region.start;
     long remapped = mapped.start + offset;
     if (!mapped.fwd_strand) {
       remapped = mapped.size - remapped - 1;
     }
-    matches.push_back(Match {mapped.query_id, remapped, mapped.fwd_strand});
+    matches[i] = Match {mapped.query_id, remapped, mapped.fwd_strand};
   }
   return matches;
 }
