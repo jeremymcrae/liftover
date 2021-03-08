@@ -1,4 +1,4 @@
-# cython: language_level=3, boundscheck=False
+# cython: language_level=3, boundscheck=False, emit_linenums=True
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -23,7 +23,6 @@ cdef extern from 'chain_file.h' namespace 'liftover':
 cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
     '''
-    strands = {True: '+', False: '-'}
     cdef Target thisptr
     cdef set_target(self, Target target):
         self.thisptr = target
@@ -32,7 +31,7 @@ cdef class PyTarget():
         matches = []
         for x in cpp_matches:
             contig = x.contig.decode('utf8')
-            strand = self.strands[x.fwd_strand]
+            strand = '+' if x.fwd_strand else '-'
             matches.append((contig, x.pos, strand))
         return matches
 
