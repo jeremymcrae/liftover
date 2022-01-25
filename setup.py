@@ -29,7 +29,7 @@ def build_zlib():
         extra_preargs=extra_compile_args)
 
 print('current_dir:', os.getcwd())
-print('contents':, os.listdir())
+print('contents:', os.listdir())
 gzstream_path = 'src/gzstream/gzstream.C'
 if sys.platform == 'win32':
     zlib, libs = build_zlib(), []
