@@ -57,6 +57,9 @@ lifter = cythonize([
               language='c++'),
     ])
 
+if sys.platform == 'win32':
+    os.rename(gzstream_path, gzstream_path.replace('.cpp', '.C'))
+
 setup(name='liftover',
       description='Package for converting between genome build coordinates',
       long_description=io.open('README.md', encoding='utf-8').read(),
