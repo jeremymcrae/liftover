@@ -4,3 +4,6 @@
 [submodule "gzstream"]
 	path = src/gzstream
 	url = https://github.com/kanedo/gzstream
+[submodule "src/zlib"]
+	path = src/zlib
+	url = https://github.com/madler/zlib.git
