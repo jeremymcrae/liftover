@@ -28,14 +28,19 @@ def build_zlib():
     return cc.compile(sources, include_dirs=include_dirs,
         extra_preargs=extra_compile_args)
 
-print('current_dir:', os.getcwd())
-print('contents:', os.listdir())
-gzstream_path = 'src/gzstream/gzstream.C'
+def get_gzstream_path():
+    gzstream_path = 'src/gzstream/gzstream.C'
+    if sys.platform == 'win32':
+        gzstream_win_path = 'src/gzstream/gzstream.cpp'
+        try:
+            os.rename(gzstream_path, gzstream_win_path)
+        except:
+            pass
+        gzstream_path = gzstream_win_path
+    return gzstream_path
+
 if sys.platform == 'win32':
     zlib, libs = build_zlib(), []
-    gzstream_win_path = gzstream_path.replace('.C', '.cpp')
-    os.rename(gzstream_path, gzstream_win_path)
-    gzstream_path = gzstream_win_path
 else:
     zlib, libs = [], ['z']
 
@@ -44,7 +49,7 @@ lifter = cythonize([
               extra_compile_args=EXTRA_COMPILE_ARGS,
               extra_link_args=EXTRA_LINK_ARGS,
               sources=['liftover/chain_file.pyx',
-                        gzstream_path,
+                        get_gzstream_path(),
                        'src/chain.cpp',
                        'src/utils.cpp',
                        'src/headers.cpp',
@@ -56,9 +61,6 @@ lifter = cythonize([
               libraries=libs,
               language='c++'),
     ])
-
-if sys.platform == 'win32':
-    os.rename(gzstream_path, gzstream_path.replace('.cpp', '.C'))
 
 setup(name='liftover',
       description='Package for converting between genome build coordinates',
