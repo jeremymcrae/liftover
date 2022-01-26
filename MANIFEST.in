@@ -9,3 +9,5 @@ include src/*.cpp
 include src/gzstream/gzstream.C
 include src/gzstream/gzstream.h
 include src/intervaltree/IntervalTree.h
+include src/zlib/*.h
+include src/zlib/*.c
