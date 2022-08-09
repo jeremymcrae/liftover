@@ -1,6 +1,9 @@
 name: liftover
 
-on: [push]
+on:
+ push:
+ schedule:
+    - cron: "33 3 3 * *"
 
 jobs:
   build:
