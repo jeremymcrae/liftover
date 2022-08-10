@@ -13,16 +13,20 @@ inline void parse(std::string & line, long & size, long & target_gap, long & que
   */
   // std::memset(coords, 0, 3);
   
+  char delim = '\t';
+  if (line.find(" ") != std::string::npos) {
+    delim = ' ';
+  }
   std::istringstream iss(line);
   std::string item;
   
-  std::getline(iss, item, '\t');
+  std::getline(iss, item, delim);
   size = std::stol(item);
   
   if (line.size() > 0) {
-    std::getline(iss, item, '\t');
+    std::getline(iss, item, delim);
     target_gap = std::stol(item);
-    std::getline(iss, item, '\t');
+    std::getline(iss, item, delim);
     query_gap = std::stol(item);
   } else {
     target_gap = 0;
