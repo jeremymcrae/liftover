@@ -1,5 +1,7 @@
 # cython: language_level=3, boundscheck=False, emit_linenums=True
 
+import os
+
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.map cimport map
@@ -47,6 +49,8 @@ cdef class ChainFile():
     cdef string query_id
     cdef targets
     def __cinit__(self, path, target, query):
+        if not os.path.exists(path):
+            raise ValueError('cannot find chainfile at "{}"'.format(path))
         self.target_id = target.encode('utf8')
         self.query_id = query.encode('utf8')
 
@@ -82,3 +86,8 @@ cdef class ChainFile():
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''
         return self[chrom][pos]
+
+    def keys(self):
+        ''' get contig names which can be converted from
+        '''
+        return self.targets.keys()
