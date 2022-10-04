@@ -72,11 +72,10 @@ def scrub_gzstream():
 
 if sys.platform == 'win32':
     zlib, libs = build_zlib(), []
-elif sys.platform == 'darwin':
-    scrub_gzstream()
-    zlib, libs = [], ['z']
 else:
     zlib, libs = [], ['z']
+
+scrub_gzstream()
 
 lifter = cythonize([
     Extension('liftover.chains',
