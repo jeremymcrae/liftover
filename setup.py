@@ -76,6 +76,7 @@ setup(name='liftover',
       author_email='jmcrae@illumina.com',
       url='https://github.com/jeremymcrae/liftover',
       packages=['liftover'],
+      package_dir={'': 'liftover'},
       install_requires=[
           'requests',
       ],
