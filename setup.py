@@ -2,10 +2,11 @@
 import io
 import glob
 import os
+from setuptools import setup
 import sys
 
 from distutils.ccompiler import new_compiler
-from setuptools import setup, Extension
+from distutils.core import Extension
 from Cython.Build import cythonize
 
 EXTRA_COMPILE_ARGS = ['-std=c++11']
