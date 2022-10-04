@@ -74,6 +74,7 @@ setup(name='liftover',
       version='1.1.14',
       author='Jeremy McRae',
       author_email='jmcrae@illumina.com',
+      license='MIT',
       url='https://github.com/jeremymcrae/liftover',
       packages=['liftover'],
       install_requires=[
