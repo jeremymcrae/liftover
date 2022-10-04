@@ -84,5 +84,5 @@ setup(name='liftover',
           'Topic :: Scientific/Engineering :: Bio-Informatics',
       ],
       ext_modules=lifter,
-      test_suite='tests',
+      test_suite='unittest:TestLoader',
       )
