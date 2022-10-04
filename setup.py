@@ -51,7 +51,7 @@ else:
     zlib, libs = [], ['z']
 
 lifter = cythonize([
-    Extension('liftover.chain_file',
+    Extension('liftover.chains',
               extra_compile_args=EXTRA_COMPILE_ARGS,
               extra_link_args=EXTRA_LINK_ARGS,
               sources=['liftover/chain_file.pyx',

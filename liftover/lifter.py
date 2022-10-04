@@ -1,7 +1,7 @@
 
 import os
 
-from liftover.chain_file import ChainFile
+from liftover.chains import ChainFile
 from liftover.download_file import download_file
 
 def get_lifter(target, query, cache=None):
