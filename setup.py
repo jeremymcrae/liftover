@@ -12,8 +12,14 @@ from Cython.Build import cythonize
 EXTRA_COMPILE_ARGS = ['-std=c++11']
 EXTRA_LINK_ARGS = []
 if sys.platform == "darwin":
-    EXTRA_COMPILE_ARGS += ["-stdlib=libc++", "-mmacosx-version-min=10.9"]
-    EXTRA_LINK_ARGS += ["-stdlib=libc++", "-mmacosx-version-min=10.9"]
+    EXTRA_COMPILE_ARGS += [
+        "-stdlib=libc++",
+        "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
+        "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+        ]
+    EXTRA_LINK_ARGS += [
+        "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib",
+        ]
 
 def build_zlib():
     ''' compile zlib code to object files for linking with liftover on windows
