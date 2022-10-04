@@ -77,7 +77,7 @@ setup(name='liftover',
       author_email='jmcrae@illumina.com',
       license='MIT',
       url='https://github.com/jeremymcrae/liftover',
-      packages=['liftover', 'liftover.tests'],
+      packages=['liftover'],
       install_requires=[
           'requests',
       ],
