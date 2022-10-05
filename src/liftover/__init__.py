@@ -4,4 +4,4 @@ __name__ = 'liftover'
 __version__ = get_distribution(__name__).version
 
 from liftover.lifter import get_lifter
-from liftover.chains import ChainFile
+from liftover.chain_file import ChainFile

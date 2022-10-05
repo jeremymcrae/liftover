@@ -2,11 +2,10 @@
 import io
 import glob
 import os
-from setuptools import setup
 import sys
 
 from distutils.ccompiler import new_compiler
-from distutils.core import Extension
+from setuptools import setup, Extension
 from Cython.Build import cythonize
 
 EXTRA_COMPILE_ARGS = ['-std=c++11']
@@ -78,7 +77,7 @@ else:
 scrub_gzstream()
 
 lifter = cythonize([
-    Extension('liftover.chains',
+    Extension('liftover.chain_file',
               extra_compile_args=EXTRA_COMPILE_ARGS,
               extra_link_args=EXTRA_LINK_ARGS,
               sources=['src/liftover/chain_file.pyx',
