@@ -106,7 +106,7 @@ setup(name='liftover',
       packages=['liftover'],
       package_dir={'': 'src'},
       install_requires=[
-          'requests',
+          'urllib3',
       ],
       classifiers=[
           'Development Status :: 4 - Beta',
