@@ -2,8 +2,8 @@
 __pycache__/
 dist/
 build/
-liftover/*.cpp
-liftover/*.so
+src/liftover/*.cpp
+src/liftover/*.so
 *.egg
 *.obj
 *.egg-info/
