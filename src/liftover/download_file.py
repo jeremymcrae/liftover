@@ -10,3 +10,4 @@ def download_file(url, path):
         for chunk in r.stream(1600):
             f.write(chunk)
     r.release_conn()
+    http.clear()
