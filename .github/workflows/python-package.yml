@@ -20,7 +20,7 @@ jobs:
           submodules: true
       
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: ${{ matrix.python }}-*
           CIBW_TEST_COMMAND: "python -m unittest discover -s {project}"
