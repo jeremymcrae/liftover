@@ -29,7 +29,7 @@ def get_lifter(target, query, cache=None):
     chain_path = os.path.join(cache, basename)
 
     if not os.path.exists(chain_path):
-        url = 'https://hgdownload.cse.ucsc.edu/goldenPath/{}/liftOver/{}'.format(target, basename)
+        url = 'https://hgdownload.soe.ucsc.edu/goldenpath/{}/liftOver/{}'.format(target, basename)
         download_file(url, chain_path)
 
     return ChainFile(chain_path, target, query)
