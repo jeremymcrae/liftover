@@ -1,6 +1,7 @@
 #ifndef LIFTOVER_TARGET_H
 #define LIFTOVER_TARGET_H
 
+#include <cstdint>
 #include <vector>
 
 #include "headers.h"
@@ -10,12 +11,12 @@
 
 namespace liftover {
 
-typedef IntervalTree<long, Mapped> Tree;
+typedef IntervalTree<std::int64_t, Mapped> Tree;
 
 struct Match {
   // hold info for a matched site after a successful query
   std::string contig;
-  long pos;
+  std::int64_t pos;
   bool fwd_strand;
 };
 
@@ -32,9 +33,9 @@ class Target {
   std::string target_id;
 public:
   Target(std::vector<Chain> & chains);
-  Target() {};
-  std::vector<Match> query(long pos);
-  std::vector<Match> operator[](long pos) {return query(pos);};
+  Target() {}
+  std::vector<Match> query(std::int64_t pos);
+  std::vector<Match> operator[](std::int64_t pos) {return query(pos);}
 };
 
 } //namespace

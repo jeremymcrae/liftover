@@ -1,6 +1,7 @@
 #ifndef LIFTOVER_CHAIN_H
 #define LIFTOVER_CHAIN_H
 
+#include <cstdint>
 #include <vector>
 #include <sstream>
 
@@ -11,40 +12,40 @@ namespace liftover {
 
 struct Mapped {
   // holds where a liftover region maps across to
-  long start;
-  long stop;
+  std::int64_t start;
+  std::int64_t stop;
   std::string query_id;
   bool fwd_strand;
-  long size;
+  std::int64_t size;
 };
 
 struct Coords {
   // store start and end coordinates, and where the region maps to
-  long start;
-  long end;
+  std::int64_t start;
+  std::int64_t end;
   Mapped data;
 };
 
-inline void parse(std::string & line, long * coords);
+inline void parse(std::string & line, std::int64_t * coords);
 
 class Chain {
   // class to hold all the regions for a single chain
-  long target;
-  long query;
+  std::int64_t target;
+  std::int64_t query;
   std::string query_id;
   std::string query_strand;
-  long query_size;
-  long target_end;
-  long query_end;
+  std::int64_t query_size;
+  std::int64_t target_end;
+  std::int64_t query_end;
   
-  long size;
-  long target_gap;
-  long query_gap;
+  std::int64_t size;
+  std::int64_t target_gap;
+  std::int64_t query_gap;
 public:
   std::vector<Coords> intervals;
   std::string target_id;
   
-  Chain() {};
+  Chain() {}
   Chain(std::string & header_line);
   void add_line(std::string & line);
 };

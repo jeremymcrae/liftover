@@ -1,6 +1,7 @@
 
 #include "target.h"
 
+#include <cstdint>
 #include <iostream>
 
 namespace liftover {
@@ -28,7 +29,7 @@ Target::Target(std::vector<Chain> & chains) {
   tree = Tree(std::move(intervals));
 }
 
-std::vector<Match> Target::query(long pos) {
+std::vector<Match> Target::query(std::int64_t pos) {
   /* find coordinates matching a specific site
   */
   std::vector<Match> matches;
@@ -38,8 +39,8 @@ std::vector<Match> Target::query(long pos) {
       continue;
     }
     Mapped & mapped = region.value;
-    long offset = pos - region.start;
-    long remapped = mapped.start + offset;
+    std::int64_t offset = pos - region.start;
+    std::int64_t remapped = mapped.start + offset;
     if (!mapped.fwd_strand) {
       remapped = mapped.size - remapped - 1;
     }

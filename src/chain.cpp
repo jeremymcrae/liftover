@@ -4,8 +4,7 @@
 
 namespace liftover {
 
-// inline void parse(std::string & line, long * coords) {
-inline void parse(std::string & line, long & size, long & target_gap, long & query_gap) {
+inline void parse(std::string & line, std::int64_t & size, std::int64_t & target_gap, std::int64_t & query_gap) {
   /* parse an alignment data line
   
   line: an alignment line e.g. '5000\t10\t5' or '5000' Most lines have 3 items

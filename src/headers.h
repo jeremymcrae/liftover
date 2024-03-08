@@ -1,6 +1,7 @@
 #ifndef CHAIN_HEADERS_H
 #define CHAIN_HEADERS_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <cassert>
@@ -12,17 +13,17 @@ namespace liftover {
 struct ChainHeader {
     // hold header data for single chain
   std::string chain;
-  long long score;
+  std::int64_t score;
   std::string target_id;
-  long target_size;
+  std::int64_t target_size;
   std::string target_strand;
-  long target_start;
-  long target_end;
+  std::int64_t target_start;
+  std::int64_t target_end;
   std::string query_id;
-  long query_size;
+  std::int64_t query_size;
   std::string query_strand;
-  long query_start;
-  long query_end;
+  std::int64_t query_start;
+  std::int64_t query_end;
   std::string id;
 };
 
