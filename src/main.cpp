@@ -1,6 +1,7 @@
 /* example code for loading liftover chains and searching a given position
 */
 
+#include <stdexcept>
 #include <iostream>
 #include <cstdint>
 
@@ -13,10 +14,17 @@ int main() {
   
   // search for a given coordinate
   std::string chrom = "chr1";
-  std::int64_t pos = 10000000;
-  for (auto x : targets[chrom][pos]) {
-    std::cout << x.contig << " pos: " << x.pos << ", on fwd:"
-              << x.fwd_strand << std::endl;
+  std::int64_t start = 10000000;
+  std::int64_t size = 1000000;
+  for (std::uint64_t pos=start; pos < (start + size); pos++) {
+    if (!targets.count(chrom)) {
+      throw std::invalid_argument("chromosome isn't in chain file: " + chrom);
+    }
+
+    for (auto x : targets[chrom][pos]) {
+      std::cout << x.contig << " pos: " << x.pos << ", on fwd:"
+                << x.fwd_strand << std::endl;
+    }
   }
 }
 
