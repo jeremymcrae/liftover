@@ -31,5 +31,8 @@ converter.query(chrom, pos)
 from liftover import ChainFile
 converter = ChainFile('/home/user/hg18ToHg38.over.chain.gz', 'hg18', 'hg38')
 converter[chrom][pos]
+
+# you can also specify an alternative website to load chain files from
+converter = get_lifter('hg19', 'hg38', chain_server='https://www.example.com')
 ```
 
