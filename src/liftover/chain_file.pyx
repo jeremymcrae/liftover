@@ -67,7 +67,7 @@ cdef class ChainFile():
             self.targets[chrom] = tgt
 
     def __repr__(self):
-        return f'liftover({self.target_id}->{self.query_id})'
+        return f'ChainFile("{self.path}")'
 
     def __getitem__(self, contig):
         ''' get the Target object for a target chromosome
