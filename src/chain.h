@@ -48,6 +48,7 @@ public:
   Chain() {}
   Chain(std::string & header_line);
   void add_line(std::string & line);
+  void validate();
 };
 
 

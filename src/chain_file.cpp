@@ -19,6 +19,7 @@ std::map<std::string, Target> open_chainfile(std::string path) {
     if (line.substr(0, 5) == "chain") {
       chain = Chain(line);
     } else if (line.empty()) { // finish existing chain at blank lines
+      chain.validate();
       chains[chain.target_id].push_back(chain);
     } else {
       chain.add_line(line);

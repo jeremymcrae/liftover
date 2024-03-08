@@ -62,9 +62,17 @@ void Chain::add_line(std::string & line) {
   
   target += size + target_gap;
   query += size + query_gap;
-  
-  assert(target == target_end);
-  assert(query == query_end);
+}
+
+// check the chain is valid, once complete
+void Chain::validate() {
+  if (target != target_end) {
+    throw std::invalid_argument("target end does not match expectations");
+  }
+
+  if (query != query_end) {
+    throw std::invalid_argument("query end does not match expectations");
+  }
 }
 
 }  // namespace
