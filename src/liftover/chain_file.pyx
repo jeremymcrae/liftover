@@ -2,6 +2,7 @@
 
 import os
 
+from libc.stdint cimport int64_t
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.map cimport map
@@ -11,7 +12,7 @@ from cython.operator cimport dereference as deref
 cdef extern from 'target.h' namespace 'liftover':
   cdef struct Match:
     string contig
-    long pos
+    int64_t pos
     bool fwd_strand
 
   cdef cppclass Target:
@@ -29,7 +30,7 @@ cdef class PyTarget():
     cdef Match x
     cdef set_target(self, Target target):
         self.thisptr = target
-    def __getitem__(self, long pos):
+    def __getitem__(self, int64_t pos):
         cpp_matches = self.thisptr[pos]
         if cpp_matches.size() == 1:
             x = cpp_matches[0]
@@ -77,12 +78,12 @@ cdef class ChainFile():
         except KeyError:
             return self.targets[f'chr{contig}']
 
-    def query(self, chrom, long pos):
+    def query(self, chrom, int64_t pos):
         '''  find the coordinate matches for a genome position
         '''
         return self[chrom][pos]
 
-    def convert_coordinate(self, chrom, long pos):
+    def convert_coordinate(self, chrom, int64_t pos):
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''
         return self[chrom][pos]
