@@ -37,6 +37,6 @@ public:
   std::vector<Match> operator[](long pos) {return query(pos);};
 };
 
-}; //namespace
+} //namespace
 
 #endif
