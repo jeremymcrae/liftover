@@ -12,7 +12,7 @@ ChainHeader process_header(std::string line) {
     std::stol(hdr[8]), hdr[9], std::stol(hdr[10]), std::stol(hdr[11]), hdr[12]};
   assert(header.chain == "chain");
   assert(header.target_strand == "+");
-  assert(header.query_strand == "+" | header.query_strand == "-");
+  assert(header.query_strand == "+" || header.query_strand == "-");
   return header;
 }
 
