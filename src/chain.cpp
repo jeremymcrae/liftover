@@ -10,11 +10,14 @@ inline void parse(std::string & line, std::int64_t & size, std::int64_t & target
   line: an alignment line e.g. '5000\t10\t5' or '5000' Most lines have 3 items
     (size, reference delta, query delta), but the final line has only one (size).
   */
-  // std::memset(coords, 0, 3);
-  
-  char delim = '\t';
-  if (line.find(" ") != std::string::npos) {
+  bool has_delim = false;
+  char delim = 0;
+  if (line.find("\t") != std::string::npos) {
+    delim = '\t';
+    has_delim = true;
+  } else if (line.find(" ") != std::string::npos) {
     delim = ' ';
+    has_delim = true;
   }
   std::istringstream iss(line);
   std::string item;
@@ -22,7 +25,7 @@ inline void parse(std::string & line, std::int64_t & size, std::int64_t & target
   std::getline(iss, item, delim);
   size = std::stol(item);
   
-  if (line.size() > 0) {
+  if (has_delim) {
     std::getline(iss, item, delim);
     target_gap = std::stol(item);
     std::getline(iss, item, delim);
