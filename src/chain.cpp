@@ -1,5 +1,7 @@
 // #include <string>
 
+#include <stdexcept>
+
 #include "chain.h"
 
 namespace liftover {
