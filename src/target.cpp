@@ -6,7 +6,7 @@
 
 namespace liftover {
 
-Target::Target(std::vector<Chain> & chains) {
+Target::Target(std::vector<Chain> & chains, bool _one_based) {
   /* make set of targets for a single chromosome
   
   This uses a vector of chains, all for a given chromosome, and builds an
@@ -26,12 +26,16 @@ Target::Target(std::vector<Chain> & chains) {
     }
     assert(target_id == chain.target_id);
   }
+  one_based = _one_based;
   tree = Tree(std::move(intervals));
 }
 
 std::vector<Match> Target::query(std::int64_t pos) {
   /* find coordinates matching a specific site
   */
+  // if lifting one-based coordinates, shift the pos to lift to zero-based
+  pos -= (std::uint64_t) one_based;
+  
   std::vector<Match> matches;
   matches.reserve(1);
   for (auto & region : tree.findOverlapping(pos, pos)) {
@@ -44,6 +48,9 @@ std::vector<Match> Target::query(std::int64_t pos) {
     if (!mapped.fwd_strand) {
       remapped = mapped.size - remapped - 1;
     }
+    // if lifting one-based coordinates, shift the lifted position to one-based
+    remapped += (std::uint64_t) one_based;
+    
     matches.push_back( Match {mapped.query_id, remapped, mapped.fwd_strand});
   }
   return matches;

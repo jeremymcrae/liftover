@@ -29,10 +29,11 @@ class Target {
   
   Currently stores the regions in an interval tree for fast queries.
   */
+ bool one_based=false;
   Tree tree;
   std::string target_id;
 public:
-  Target(std::vector<Chain> & chains);
+  Target(std::vector<Chain> & chains, bool _one_based=false);
   Target() {}
   std::vector<Match> query(std::int64_t pos);
   std::vector<Match> operator[](std::int64_t pos) {return query(pos);}

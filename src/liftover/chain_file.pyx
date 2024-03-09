@@ -21,7 +21,7 @@ cdef extern from 'target.h' namespace 'liftover':
     vector[Match] operator[](int)
 
 cdef extern from 'chain_file.h' namespace 'liftover':
-  map[string, Target] open_chainfile(string) except+
+  map[string, Target] open_chainfile(string, bool) except+
 
 cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
@@ -48,14 +48,24 @@ cdef class PyTarget():
 cdef class ChainFile():
     cdef targets
     cdef str path
-    def __cinit__(self, path, target: str='', query: str=''):
+    def __cinit__(self, path, target: str='', query: str='', one_based: bool=False):
+        ''' 
+        open the chain file for lifting coordinates
+        
+        Args:
+            path: path to chain file
+            target: ID for target genome (deprecated, but don't drop since other 
+                    code might already use this argument).
+            query: ID for query genome (deprecated, but as above)
+            one_based: whether query coordinates are one-based
+        '''
         self.path = str(path)
 
         # open the chainfile and move the chromosome mappings to a python
         # dictionary, as accessing this is much faster than converting the
         # c++ Target object each time we query in a chromosome.
         self.targets = {}
-        cdef map[string, Target] chainfile = open_chainfile(self.path.encode('utf8'))
+        cdef map[string, Target] chainfile = open_chainfile(self.path.encode('utf8'), one_based)
         for x in chainfile:
             chrom = x.first.decode('utf8')
             tgt = PyTarget()

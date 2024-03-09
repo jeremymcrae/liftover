@@ -12,7 +12,7 @@
 
 namespace liftover {
 
-std::map<std::string, Target> open_chainfile(std::string path);
+std::map<std::string, Target> open_chainfile(std::string path, bool one_based=false);
 
 }
 

@@ -18,7 +18,7 @@ Install via pip: `pip install liftover`
 ```python
 from liftover import get_lifter
 
-converter = get_lifter('hg19', 'hg38')
+converter = get_lifter('hg19', 'hg38', one_based=True)
 chrom = '1'
 pos = 103786442
 converter[chrom][pos]
@@ -29,7 +29,7 @@ converter.query(chrom, pos)
 
 # alternatively create a converter directly from a chainfile
 from liftover import ChainFile
-converter = ChainFile('/home/user/hg18ToHg38.over.chain.gz')
+converter = ChainFile('/home/user/hg18ToHg38.over.chain.gz', one_based=True)
 converter[chrom][pos]
 
 # you can also specify an alternative website to load chain files from

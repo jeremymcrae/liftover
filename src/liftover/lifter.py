@@ -4,7 +4,7 @@ import os
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
-def get_lifter(target: str, query: str, cache: str=None, chain_server='https://hgdownload.soe.ucsc.edu'):
+def get_lifter(target: str, query: str, cache: str=None, one_based=False, chain_server='https://hgdownload.soe.ucsc.edu'):
     ''' create a converter to map between genome builds
 
     Args:
@@ -36,4 +36,4 @@ def get_lifter(target: str, query: str, cache: str=None, chain_server='https://h
         url = f'{chain_server}/goldenpath/{target}/liftOver/{basename}'
         download_file(url, chain_path)
 
-    return ChainFile(chain_path)
+    return ChainFile(chain_path, one_based=one_based)

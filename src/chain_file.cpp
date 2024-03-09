@@ -6,7 +6,7 @@
 
 namespace liftover {
 
-std::map<std::string, Target> open_chainfile(std::string path) {
+std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   /* open a gzipped liftover chain file, and parses contents
   
   This builds a map of Targets, indexed by chromosome, so we can quickly select
@@ -37,7 +37,7 @@ std::map<std::string, Target> open_chainfile(std::string path) {
   // convert list of intervals into interval trees for each chromosome
   std::map<std::string, Target> targets;
   for (auto x : chains) {
-    targets[x.first] = Target(x.second);
+    targets[x.first] = Target(x.second, one_based);
   }
   return targets;
 }
