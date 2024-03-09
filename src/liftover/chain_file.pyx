@@ -46,14 +46,10 @@ cdef class PyTarget():
         return matches
 
 cdef class ChainFile():
-    cdef string target_id
-    cdef string query_id
     cdef targets
     cdef str path
     def __cinit__(self, path, target: str='', query: str=''):
         self.path = str(path)
-        self.target_id = target.encode('utf8')
-        self.query_id = query.encode('utf8')
 
         # open the chainfile and move the chromosome mappings to a python
         # dictionary, as accessing this is much faster than converting the

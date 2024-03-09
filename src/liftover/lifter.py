@@ -36,4 +36,4 @@ def get_lifter(target: str, query: str, cache: str=None, chain_server='https://h
         url = f'{chain_server}/goldenpath/{target}/liftOver/{basename}'
         download_file(url, chain_path)
 
-    return ChainFile(chain_path, target, query)
+    return ChainFile(chain_path)
