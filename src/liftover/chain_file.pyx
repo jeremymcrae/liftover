@@ -45,9 +45,32 @@ cdef class PyTarget():
             matches.append((contig, x.pos, strand))
         return matches
 
+cdef sanatize_prefix(str contig, bool target_prefixed):
+    ''' if we can't find the contig, check if we need to fix the prefix.
+    
+    This is primarily for convenience when dealing with genome builds that omit
+    a 'chr' prefix.
+    '''
+    cdef bool contig_prefixed = contig.startswith('chr')
+    if contig_prefixed and target_prefixed:
+        # both contig and targets use 'chr' prefix
+        return contig
+    elif not contig_prefixed and not target_prefixed:
+        # neither contig nor targets use 'chr' prefix
+        return contig
+    elif contig_prefixed and not target_prefixed:
+        # remove 'chr' prefix, since targets don't use it
+        return contig[3:]
+    elif not contig_prefixed and target_prefixed:
+        # add 'chr' prefix, since targets use it
+        return f'chr{contig}'
+    else:
+        raise ValueError('cannot sanatize contig')
+
 cdef class ChainFile():
     cdef targets
     cdef str path
+    cdef bool target_prefixed
     def __cinit__(self, path, target: str='', query: str='', one_based: bool=False):
         ''' 
         open the chain file for lifting coordinates
@@ -71,17 +94,23 @@ cdef class ChainFile():
             tgt = PyTarget()
             tgt.set_target(x.second)
             self.targets[chrom] = tgt
+        
+        self.target_prefixed = chrom.startswith('chr')
 
     def __repr__(self):
         return f'ChainFile("{self.path}")'
 
-    def __getitem__(self, contig):
+    def __getitem__(self, str contig):
         ''' get the Target object for a target chromosome
         '''
         try:
             return self.targets[contig]
-        except KeyError:
-            return self.targets[f'chr{contig}']
+        except KeyError as err:
+            contig = sanatize_prefix(contig, self.target_prefixed)
+            if contig in self.targets:
+                return self.targets[contig]
+            else:
+                return PyTarget()
 
     def query(self, chrom, int64_t pos):
         '''  find the coordinate matches for a genome position
