@@ -71,6 +71,7 @@ cdef class ChainFile():
     cdef targets
     cdef str path
     cdef bool target_prefixed
+    cdef PyTarget missing_target
     def __cinit__(self, path, target: str='', query: str='', one_based: bool=False):
         ''' 
         open the chain file for lifting coordinates
@@ -96,6 +97,7 @@ cdef class ChainFile():
             self.targets[chrom] = tgt
         
         self.target_prefixed = chrom.startswith('chr')
+        self.missing_target = PyTarget()
 
     def __repr__(self):
         return f'ChainFile("{self.path}")'
@@ -110,7 +112,7 @@ cdef class ChainFile():
             if contig in self.targets:
                 return self.targets[contig]
             else:
-                return PyTarget()
+                return self.missing_target
 
     def query(self, chrom, int64_t pos):
         '''  find the coordinate matches for a genome position
