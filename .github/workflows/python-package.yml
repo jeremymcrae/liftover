@@ -7,23 +7,50 @@ on:
     - cron: "33 3 3 * *"
 
 jobs:
-  build_wheels:
+  default_tests:
+    name: test package
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-        python: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
+        os: ['ubuntu-24.04-arm', 'ubuntu-latest', 'macos-latest', 'windows-latest']
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools build
+          pip install .
+          python -m unittest discover
+
+  build_wheels:
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-24.04-arm', 'ubuntu-latest', 'macos-latest', 'windows-latest']
+        python: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_BUILD: ${{ matrix.python }}-*
           CIBW_TEST_COMMAND: "python -m unittest discover -s {project}"
+          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
 
       - uses: actions/upload-artifact@v4
         with:
@@ -31,10 +58,11 @@ jobs:
           name: artifact-${{ matrix.os }}-${{ matrix.python }}
 
   build_sdist:
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -47,7 +75,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install setuptools build
-          python -m build
+          python -m build --sdist
           pip install .
           python -m unittest discover
 
