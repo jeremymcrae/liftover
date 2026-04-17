@@ -14,7 +14,7 @@ inline void parse(std::string & line, std::int64_t & size, std::int64_t & target
   */
   char * end;
   const char * ptr = line.c_str();
-  size = std::strtol(ptr, &end, 10);
+  size = std::strtoll(ptr, &end, 10);
   if (*end == '\t' || *end == ' ') {
     target_gap = std::strtoll(end + 1, &end, 10);
     query_gap = std::strtoll(end + 1, &end, 10);
