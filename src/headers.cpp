@@ -3,7 +3,7 @@
 
 namespace liftover {
 
-ChainHeader process_header(std::string line) {
+ChainHeader process_header(std::string & line) {
   /* process the header, and performs simple sanity checks
   */
   std::vector<std::string> hdr;

@@ -27,7 +27,7 @@ struct ChainHeader {
   std::string id;
 };
 
-ChainHeader process_header(std::string line);
+ChainHeader process_header(std::string & line);
 
 } // namespace
 
