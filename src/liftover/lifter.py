@@ -8,7 +8,8 @@ def get_lifter(target: str
                query: str=None,
                cache: str=None,
                one_based: bool=False,
-               chain_server: str='https://hgdownload.soe.ucsc.edu'):
+               chain_server: str='https://hgdownload.soe.ucsc.edu',
+               **kwargs):
     ''' create a converter to map between genome builds
 
     Args:
@@ -24,6 +25,10 @@ def get_lifter(target: str
         A ChainFile object capable of converting genome coordinates from the
         target genome to the query genome.
     '''
+
+    # check for cache directory in kwargs (matches pyliftover interface)
+    if 'cache_dir' in kwargs:
+        cache = kwargs['cache_dir']
 
     if cache is None:
         cache = os.path.expanduser('~/.liftover')

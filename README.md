@@ -34,5 +34,12 @@ converter[chrom][pos]
 
 # you can also specify an alternative website to load chain files from
 converter = get_lifter('hg19', 'hg38', chain_server='https://www.example.com')
+
+# this also matches the core pyliftover interface
+from liftover import LiftOver # synonym for `get_lifter`
+
+lifter = LiftOver('hg19', 'hg38') # or LiftOver(PATH_TO_CHAIN), but not LiftOver(filehandle)
+lifter.convert_coordinate(chrom, pos)
+
 ```
 
