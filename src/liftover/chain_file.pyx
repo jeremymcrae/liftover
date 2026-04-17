@@ -17,8 +17,8 @@ cdef extern from 'target.h' namespace 'liftover':
 
   cdef cppclass Target:
     Target() except +
-    vector[Match] query(int)
-    vector[Match] operator[](int)
+    vector[Match] query(int64_t)
+    vector[Match] operator[](int64_t)
 
 cdef extern from 'chain_file.h' namespace 'liftover':
   map[string, Target] open_chainfile(string, bool) except+
