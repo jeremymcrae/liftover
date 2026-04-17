@@ -24,8 +24,7 @@ def get_lifter(target: str, query: str, cache: str=None, one_based=False, chain_
     if cache is None:
         cache = os.path.expanduser('~/.liftover')
 
-    if not os.path.exists(cache):
-        os.mkdir(cache)
+    os.makedirs(cache, exist_ok=True)
 
     query = query[0].upper() + query[1:]
     target = target[0].lower() + target[1:]
