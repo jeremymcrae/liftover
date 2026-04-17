@@ -20,10 +20,12 @@ Target::Target(std::vector<Chain> & chains, bool _one_based) {
   
   // make intervals for the tree from all regions in all chains
   for (const auto & chain : chains) {
-    for (auto ival: chain.intervals) {
+    for (const auto & ival: chain.intervals) {
       intervals.push_back(Tree::interval(ival.start, ival.end, ival.data));
     }
-    assert(target_id == chain.target_id);
+    if (target_id != chain.target_id) {
+      throw std::invalid_argument("target ID mismatch");
+    }
   }
   one_based = _one_based;
   tree = Tree(std::move(intervals));
