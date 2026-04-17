@@ -12,12 +12,11 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   This builds a map of Targets, indexed by chromosome, so we can quickly select
   the Target of interest when querying a given coordinate.
   */
-  std::ifstream tmp(path, std::ios::in | std::ios::binary);
-  if (!tmp.is_open()) {
+  igzstream infile(path.c_str());
+  if (!infile.good()) {
     throw std::invalid_argument("cannot open chain file at " + path);
   }
 
-  igzstream infile(path.c_str());
   std::string line;
   std::map<std::string, std::vector<Chain>> chains;
   Chain chain;
