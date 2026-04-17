@@ -32,6 +32,7 @@ cdef class PyTarget():
         self.thisptr = target
     def __getitem__(self, int64_t pos):
         cpp_matches = self.thisptr[pos]
+        # optimization for the most common case
         if cpp_matches.size() == 1:
             x = cpp_matches[0]
             contig = x.contig.decode('utf8')
