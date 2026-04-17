@@ -20,17 +20,30 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   std::string line;
   std::map<std::string, std::vector<Chain>> chains;
   Chain chain;
+  bool has_chain = false;
   while (std::getline(infile, line)) {
-    if (line[0] == '#') { continue; } // skip comment lines
-    
-    if (line.substr(0, 5) == "chain") {
+    if (line.empty()) {
+      // finish existing chain at blank lines
+      if (has_chain) {
+        chain.validate();
+        chains[chain.target_id].push_back(chain);
+        has_chain = false;
+      }
+    } else if (line[0] == '#') {
+      // skip comment lines
+      continue;
+    } else if (line.substr(0, 5) == "chain") {
       chain = Chain(line);
-    } else if (line.empty()) { // finish existing chain at blank lines
-      chain.validate();
-      chains[chain.target_id].push_back(chain);
+      has_chain = true;
     } else {
       chain.add_line(line);
     }
+  }
+
+  if (has_chain) {
+    // include the final chain, if the file doesn't end with a blank line
+    chain.validate();
+    chains[chain.target_id].push_back(chain);
   }
   
   // convert list of intervals into interval trees for each chromosome
