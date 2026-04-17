@@ -45,7 +45,7 @@ cdef class PyTarget():
             matches.append((contig, x.pos, strand))
         return matches
 
-cdef sanatize_prefix(str contig, bool target_prefixed):
+cdef sanitize_prefix(str contig, bool target_prefixed):
     ''' if we can't find the contig, check if we need to fix the prefix.
     
     This is primarily for convenience when dealing with genome builds that omit
@@ -108,7 +108,7 @@ cdef class ChainFile():
         try:
             return self.targets[contig]
         except KeyError as err:
-            contig = sanatize_prefix(contig, self.target_prefixed)
+            contig = sanitize_prefix(contig, self.target_prefixed)
             if contig in self.targets:
                 return self.targets[contig]
             else:
