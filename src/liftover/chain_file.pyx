@@ -66,7 +66,7 @@ cdef sanitize_prefix(str contig, bool target_prefixed):
         # add 'chr' prefix, since targets use it
         return f'chr{contig}'
     else:
-        raise ValueError('cannot sanatize contig')
+        raise ValueError('cannot sanitize contig')
 
 cdef class ChainFile():
     cdef targets
