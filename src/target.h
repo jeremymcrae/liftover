@@ -29,7 +29,7 @@ class Target {
   
   Currently stores the regions in an interval tree for fast queries.
   */
- bool one_based=false;
+  bool one_based=false;
   Tree tree;
   std::string target_id;
 public:
