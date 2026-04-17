@@ -9,7 +9,7 @@ def get_lifter(target: str, query: str, cache: str=None, one_based=False, chain_
 
     Args:
         target: genome build to convert from e.g. 'hg19'
-        source: genome build to convert to e.g. 'hg38'
+        query: genome build to convert to e.g. 'hg38'
         cache: path to cache folder, defaults to ~/.liftover
         chain_server: url to server with chain files. This allows for mirrors of
             the UCSC chain files, but they need to adhere to the UCSC url structure
