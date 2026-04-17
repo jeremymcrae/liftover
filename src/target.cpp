@@ -16,11 +16,11 @@ Target::Target(std::vector<Chain> & chains, bool _one_based) {
   Tree::interval_vector intervals;
   
   int size = 0;
-  for (auto chain : chains) { size += chain.intervals.size(); }
+  for (const auto & chain : chains) { size += chain.intervals.size(); }
   intervals.reserve(size);
   
   // make intervals for the tree from all regions in all chains
-  for (auto chain : chains) {
+  for (const auto & chain : chains) {
     for (auto ival: chain.intervals) {
       intervals.push_back(Tree::interval(ival.start, ival.end, ival.data));
     }
