@@ -4,7 +4,11 @@ import os
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
-def get_lifter(target: str, query: str, cache: str=None, one_based=False, chain_server='https://hgdownload.soe.ucsc.edu'):
+def get_lifter(target: str
+               query: str=None,
+               cache: str=None,
+               one_based: bool=False,
+               chain_server: str='https://hgdownload.soe.ucsc.edu'):
     ''' create a converter to map between genome builds
 
     Args:
@@ -26,12 +30,21 @@ def get_lifter(target: str, query: str, cache: str=None, one_based=False, chain_
 
     os.makedirs(cache, exist_ok=True)
 
-    query = query[0].upper() + query[1:]
-    target = target[0].lower() + target[1:]
-    basename = '{}To{}.over.chain.gz'.format(target, query)
-    chain_path = os.path.join(cache, basename)
+    if query is None:
+        # if no query is provided, assume the target is a chain file
+        if target.endswith('.chain.gz'):    
+            chain_path = target
+        else:
+            raise ValueError('target must be a chain file if no query is provided')
+    else:
+        # otherwise, construct the chain file path
+        query = query[0].upper() + query[1:]
+        target = target[0].lower() + target[1:]
+        basename = '{}To{}.over.chain.gz'.format(target, query)
+        chain_path = os.path.join(cache, basename)
 
     if not os.path.exists(chain_path):
+        # if the chain file doesn't exist, download it
         url = f'{chain_server}/goldenpath/{target}/liftOver/{basename}'
         download_file(url, chain_path)
 
