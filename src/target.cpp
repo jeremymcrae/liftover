@@ -2,7 +2,6 @@
 #include "target.h"
 
 #include <cstdint>
-#include <iostream>
 
 namespace liftover {
 
