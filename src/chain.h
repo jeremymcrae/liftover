@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <vector>
-#include <sstream>
 
 #include "headers.h"
 
@@ -24,8 +23,6 @@ struct Coords {
   std::int64_t end;
   Mapped data;
 };
-
-inline void parse(std::string & line, std::int64_t * coords);
 
 class Chain {
   // class to hold all the regions for a single chain
