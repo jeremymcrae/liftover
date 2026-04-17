@@ -94,24 +94,7 @@ lifter = cythonize([
               language='c++'),
     ])
 
-setup(name='liftover',
-      description='Package for converting between genome build coordinates',
-      long_description=io.open('README.md', encoding='utf-8').read(),
-      long_description_content_type='text/markdown',
-      version='1.3.3',
-      author='Jeremy McRae',
-      author_email='jmcrae@illumina.com',
-      license='MIT',
-      url='https://github.com/jeremymcrae/liftover',
-      packages=['liftover'],
-      package_dir={'': 'src'},
-      install_requires=[
-          'urllib3',
-      ],
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Topic :: Scientific/Engineering :: Bio-Informatics',
-      ],
+setup(package_dir={'': 'src'},
       ext_modules=lifter,
-      test_suite='unittest:TestLoader',
+      test_loader='unittest:TestLoader',
       )
