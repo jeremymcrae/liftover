@@ -4,7 +4,7 @@ import os
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
-def get_lifter(target: str
+def get_lifter(target: str,
                query: str=None,
                cache: str=None,
                one_based: bool=False,
