@@ -18,8 +18,8 @@ ChainHeader process_header(std::string & line) {
   }
 
   ChainHeader header = ChainHeader {hdr[0], std::stoll(hdr[1]), hdr[2],
-    std::stol(hdr[3]), hdr[4], std::stol(hdr[5]), std::stol(hdr[6]), hdr[7],
-    std::stol(hdr[8]), hdr[9], std::stol(hdr[10]), std::stol(hdr[11]), hdr[12]};
+    std::stoll(hdr[3]), hdr[4], std::stoll(hdr[5]), std::stoll(hdr[6]), hdr[7],
+    std::stoll(hdr[8]), hdr[9], std::stoll(hdr[10]), std::stoll(hdr[11]), hdr[12]};
   
   if (header.chain != "chain") {
     throw std::invalid_argument("header line does not start with 'chain': " + line);
