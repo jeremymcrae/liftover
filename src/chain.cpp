@@ -15,9 +15,26 @@ inline void parse(std::string & line, std::int64_t & size, std::int64_t & target
   char * end;
   const char * ptr = line.c_str();
   size = std::strtoll(ptr, &end, 10);
-  if (*end == '\t' || *end == ' ') {
-    target_gap = std::strtoll(end + 1, &end, 10);
-    query_gap = std::strtoll(end + 1, &end, 10);
+  if (end == ptr) {
+    throw std::invalid_argument("invalid alignment line: " + line);
+  }
+
+  if (*end != '\0') {
+    // if there are more items, parse the target and query gaps
+    ptr = end;
+    target_gap = std::strtoll(ptr, &end, 10);
+    // check that we parsed a valid number
+    if (end == ptr) {
+      throw std::invalid_argument("invalid alignment line: " + line);
+    }
+
+    // move on to the final item
+    ptr = end;
+    query_gap = std::strtoll(ptr, &end, 10);
+    // and check again that we parsed a valid number
+    if (end == ptr) {
+      throw std::invalid_argument("invalid alignment line: " + line);
+    }
   } else {
     target_gap = 0;
     query_gap = 0;
