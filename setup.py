@@ -3,7 +3,6 @@ import glob
 import os
 import sys
 
-from setuptools._distutils.ccompiler import new_compiler
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
@@ -18,20 +17,6 @@ if sys.platform == "darwin":
     EXTRA_LINK_ARGS += [
         "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib",
         ]
-
-def build_zlib():
-    ''' compile zlib code to object files for linking with liftover on windows
-    
-    Returns:
-        list of paths to compiled object code
-    '''
-    include_dirs = ['src/zlib/']
-    sources = list(glob.glob('src/zlib/*.c'))
-    extra_compile_args = []
-    
-    cc = new_compiler()
-    return cc.compile(sources, include_dirs=include_dirs,
-        extra_preargs=extra_compile_args)
 
 def get_gzstream_path():
     ''' workaround for building gzstream on windows
@@ -68,32 +53,38 @@ def scrub_gzstream():
                 line = '#include "gzstream.h"\n'
             handle.write(line)
 
+sources = [
+    'src/liftover/chain_file.pyx',
+    get_gzstream_path(),
+    'src/chain.cpp',
+    'src/utils.cpp',
+    'src/headers.cpp',
+    'src/target.cpp',
+    'src/chain_file.cpp',
+]
+
+libs = ['z']
+include_dirs = ['src/', 'src/intervaltree/']
+
 if sys.platform == 'win32':
-    zlib, libs = build_zlib(), []
-else:
-    zlib, libs = [], ['z']
+    sources += glob.glob('src/zlib/*.c')
+    include_dirs.append('src/zlib/')
+    libs = []
 
 scrub_gzstream()
 
-lifter = cythonize([
+ext = [
     Extension('liftover.chain_file',
               extra_compile_args=EXTRA_COMPILE_ARGS,
               extra_link_args=EXTRA_LINK_ARGS,
-              sources=['src/liftover/chain_file.pyx',
-                        get_gzstream_path(),
-                       'src/chain.cpp',
-                       'src/utils.cpp',
-                       'src/headers.cpp',
-                       'src/target.cpp',
-                       'src/chain_file.cpp'],
-              extra_objects=zlib,
-              include_dirs=['src/', 'src/intervaltree/', 'src/zlib/'],
+              sources=sources,
+              include_dirs=include_dirs,
               library_dirs=['src/', 'src/intervaltree/'],
               libraries=libs,
               language='c++'),
-    ])
+    ]
 
 setup(package_dir={'': 'src'},
-      ext_modules=lifter,
+      ext_modules=cythonize(ext),
       test_loader='unittest:TestLoader',
       )
