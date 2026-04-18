@@ -47,10 +47,10 @@ def get_lifter(target: str,
         target = target[0].lower() + target[1:]
         basename = '{}To{}.over.chain.gz'.format(target, query)
         chain_path = os.path.join(cache, basename)
-
-    if not os.path.exists(chain_path):
-        # if the chain file doesn't exist, download it
-        url = f'{chain_server}/goldenpath/{target}/liftOver/{basename}'
-        download_file(url, chain_path)
+        
+        if not os.path.exists(chain_path):
+            # if the chain file doesn't exist, download it
+            url = f'{chain_server}/goldenpath/{target}/liftOver/{basename}'
+            download_file(url, chain_path)
 
     return ChainFile(chain_path, one_based=one_based)
