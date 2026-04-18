@@ -21,6 +21,11 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   Chain chain;
   bool has_chain = false;
   while (std::getline(infile, line)) {
+    // sanatize line endings
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+    
     if (line.empty()) {
       // finish existing chain at blank lines
       if (has_chain) {
