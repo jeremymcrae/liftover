@@ -7,7 +7,6 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.map cimport map
 from libcpp cimport bool
-from cython.operator cimport dereference as deref
 
 cdef extern from 'target.h' namespace 'liftover':
   cdef struct Match:
