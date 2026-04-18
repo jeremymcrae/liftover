@@ -28,7 +28,7 @@ class TestChainFile(unittest.TestCase):
 
         lines = ['chain 21270171362 chr1 249250621 + 10000 249233096 chr1 247249719 + 0 247199719 2\n',
                  '619 137 0\n',
-                 '166661 50000 50000\n'
+                 '166661 50000 50000\n',
                  '\n']
 
         with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
@@ -46,7 +46,7 @@ class TestChainFile(unittest.TestCase):
 
         lines = ['chain 21270171362 chr1 249250621 + 10000 249233096 chr1 247249719 + 0 247199719\n',
                  '619 137 0\n',
-                 '166661 50000 50000\n'
+                 '166661 50000 50000\n',
                  '\n']
 
         with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
@@ -64,7 +64,7 @@ class TestChainFile(unittest.TestCase):
 
         lines = ['chain 21270171362 chr1 249250621 + 10000 249233096 chr1 247249719 + 0 247199719 2\n',
                  '619 137 0\n',
-                 '166661 50000\n'
+                 '166661 50000\n',
                  '\n']
 
         with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
@@ -72,42 +72,6 @@ class TestChainFile(unittest.TestCase):
             with gzip.open(tmp_file.name, 'wt') as handle:
                 handle.writelines(lines)
 
-            with self.assertRaises(ValueError) as context:
-                ChainFile(tmp_file.name)
-            self.assertTrue('invalid alignment line' in context.exception.args[0])
-
-    def test_invalid_chain_file_longline(self):
-        ''' check slightly long chain file lines don't raise an error
-        '''
-
-        lines = ['chain 21270171362 chr1 249250621 + 10000 249233096 chr1 247249719 + 0 247199719 2\n',
-                 '619 137 0\n',
-                 '166661 50000 50000 50000\n'
-                 '\n']
-
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
-            # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
-                handle.writelines(lines)
-
-            with self.assertRaises(ValueError) as context:
-                ChainFile(tmp_file.name)
-            self.assertTrue('target end does not match expectations' in context.exception.args[0])
-
-    def test_invalid_chain_file_text_in_number(self):
-        ''' check chain file lines with text in a number field fail
-        '''
-
-        lines = ['chain 21270171362 chr1 249250621 + 10000 249233096 chr1 247249719 + 0 247199719 2\n',
-                 's619 137 0\n',
-                 '166661 50000 50000 50000\n'
-                 '\n']
-
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
-            # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
-                handle.writelines(lines)
-            
             with self.assertRaises(ValueError) as context:
                 ChainFile(tmp_file.name)
             self.assertTrue('invalid alignment line' in context.exception.args[0])
@@ -118,7 +82,78 @@ class TestChainFile(unittest.TestCase):
         
         lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 2\n',
                  '5 0 5\n',
-                 '5 0 5\n'
+                 '5 0 5\n',
+                 '\n']
+
+        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+            # create a temporary file with valid content
+            with gzip.open(tmp_file.name, 'wt') as handle:
+                handle.writelines(lines)
+            
+            chain = ChainFile(tmp_file.name)
+            mapped = chain['chr1'][6]
+            self.assertEqual(mapped[0][1], 21)
+
+    def test_chain_file_missing_newline(self):
+        ''' check a chain file is fine without a final newline
+        '''
+        
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 2\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 ]
+
+        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+            # create a temporary file with valid content
+            with gzip.open(tmp_file.name, 'wt') as handle:
+                handle.writelines(lines)
+            
+            chain = ChainFile(tmp_file.name)
+            mapped = chain['chr1'][6]
+            self.assertEqual(mapped[0][1], 21)
+
+    def test_chain_file_missing_commentline(self):
+        ''' check a chain file containing comment lines is fine
+        '''
+        
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 2\n',
+                 '#5 0 5\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 ]
+
+        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+            # create a temporary file with valid content
+            with gzip.open(tmp_file.name, 'wt') as handle:
+                handle.writelines(lines)
+            
+            chain = ChainFile(tmp_file.name)
+            mapped = chain['chr1'][6]
+            self.assertEqual(mapped[0][1], 21)
+
+    def test_chain_file_longline(self):
+        ''' check slightly long chain file lines can be parsed
+        '''
+
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 2\n',
+                 '5 0 5\n',
+                 '5 0 5 5\n',
+                 '\n']
+
+        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+            # create a temporary file with mostly valid content
+            with gzip.open(tmp_file.name, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(tmp_file.name)
+
+    def test_invalid_chain_file_text_in_number(self):
+        ''' check chain file lines with text in a number field fail
+        '''
+
+        lines = ['chain 21270171362 chr1 249250621 + 10000 249233096 chr1 247249719 + 0 247199719 2\n',
+                 's619 137 0\n',
+                 '166661 50000 50000 50000\n',
                  '\n']
 
         with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
@@ -126,9 +161,9 @@ class TestChainFile(unittest.TestCase):
             with gzip.open(tmp_file.name, 'wt') as handle:
                 handle.writelines(lines)
             
-            chain = ChainFile(tmp_file.name)
-            mapped = chain['chr1'][6]
-            self.assertEqual(mapped[0][1], 21)
+            with self.assertRaises(ValueError) as context:
+                ChainFile(tmp_file.name)
+            self.assertTrue('invalid alignment line' in context.exception.args[0])
 
     def test_chain_file_large_number(self):
         ''' check chain file lines with extremely large numbers are fine
@@ -137,11 +172,11 @@ class TestChainFile(unittest.TestCase):
         large = 2**63 - 50
         lines = [f'chain 0 chr1 {large} + 0 {large} chr1 {large} + 10 {large + 20} 2\n',
                  '5 0 5\n',
-                 f'{large - 5} 0 5\n'
+                 f'{large - 5} 0 5\n',
                  '\n']
 
         with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
-            # create a temporary file with invalid content
+            # create a temporary file with valid content
             with gzip.open(tmp_file.name, 'wt') as handle:
                 handle.writelines(lines)
             
