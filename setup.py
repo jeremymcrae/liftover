@@ -3,7 +3,7 @@ import glob
 import os
 import sys
 
-from distutils.ccompiler import new_compiler
+from setuptools._distutils.ccompiler import new_compiler
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
