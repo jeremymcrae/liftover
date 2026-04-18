@@ -1,5 +1,6 @@
 
 import gzip
+import os
 import unittest
 from pathlib import Path
 import tempfile
@@ -14,13 +15,14 @@ class TestChainFile(unittest.TestCase):
         ''' check we raise an error when parsing an invalid chain file
         '''
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.write('invalid content')
 
             with self.assertRaises(ValueError):
-                ChainFile(tmp_file.name)
+                ChainFile(path)
     
     def test_invalid_chain_file_incomplete(self):
         ''' check we raise an error when parsing an incomplete chain file
@@ -31,13 +33,14 @@ class TestChainFile(unittest.TestCase):
                  '166661 50000 50000\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
             with self.assertRaises(ValueError) as context:
-                ChainFile(tmp_file.name)
+                ChainFile(path)
             self.assertTrue('target end does not match expectations' in context.exception.args[0])
     
     def test_invalid_chain_file_wrong_header(self):
@@ -49,13 +52,14 @@ class TestChainFile(unittest.TestCase):
                  '166661 50000 50000\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
             with self.assertRaises(ValueError) as context:
-                ChainFile(tmp_file.name)
+                ChainFile(path)
             self.assertTrue('invalid header line' in context.exception.args[0])
 
     def test_invalid_chain_file_shortline(self):
@@ -67,13 +71,14 @@ class TestChainFile(unittest.TestCase):
                  '166661 50000\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
 
             with self.assertRaises(ValueError) as context:
-                ChainFile(tmp_file.name)
+                ChainFile(path)
             self.assertTrue('invalid alignment line' in context.exception.args[0])
 
     def test_chain_file_minimal(self):
@@ -85,12 +90,13 @@ class TestChainFile(unittest.TestCase):
                  '5 0 5\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with valid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
-            chain = ChainFile(tmp_file.name)
+            chain = ChainFile(path)
             mapped = chain['chr1'][6]
             self.assertEqual(mapped[0][1], 21)
 
@@ -103,12 +109,13 @@ class TestChainFile(unittest.TestCase):
                  '5 0 5\n',
                  ]
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with valid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
-            chain = ChainFile(tmp_file.name)
+            chain = ChainFile(path)
             mapped = chain['chr1'][6]
             self.assertEqual(mapped[0][1], 21)
 
@@ -122,12 +129,13 @@ class TestChainFile(unittest.TestCase):
                  '5 0 5\n',
                  ]
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with valid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
-            chain = ChainFile(tmp_file.name)
+            chain = ChainFile(path)
             mapped = chain['chr1'][6]
             self.assertEqual(mapped[0][1], 21)
 
@@ -140,12 +148,13 @@ class TestChainFile(unittest.TestCase):
                  '5 0 5 5\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with mostly valid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
 
-            chain = ChainFile(tmp_file.name)
+            chain = ChainFile(path)
 
     def test_invalid_chain_file_text_in_number(self):
         ''' check chain file lines with text in a number field fail
@@ -156,13 +165,14 @@ class TestChainFile(unittest.TestCase):
                  '166661 50000 50000 50000\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with invalid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
             with self.assertRaises(ValueError) as context:
-                ChainFile(tmp_file.name)
+                ChainFile(path)
             self.assertTrue('invalid alignment line' in context.exception.args[0])
 
     def test_chain_file_large_number(self):
@@ -175,12 +185,13 @@ class TestChainFile(unittest.TestCase):
                  f'{large - 5} 0 5\n',
                  '\n']
 
-        with tempfile.NamedTemporaryFile(suffix='.chain.gz') as tmp_file:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
             # create a temporary file with valid content
-            with gzip.open(tmp_file.name, 'wt') as handle:
+            with gzip.open(path, 'wt') as handle:
                 handle.writelines(lines)
             
-            chain = ChainFile(tmp_file.name)
+            chain = ChainFile(path)
             mapped = chain['chr1'][large - 50]
             self.assertEqual(mapped[0][1], large - 40 + 5)
 
