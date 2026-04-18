@@ -25,7 +25,7 @@ def download_file(url: str, path: str) -> None:
             with os.fdopen(fd, 'wb') as f:
                 for chunk in r.stream(1600):
                     f.write(chunk)
-            os.rename(tmp_path, path)
+            os.replace(tmp_path, path)
         except BaseException:
             os.unlink(tmp_path)
             raise
