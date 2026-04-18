@@ -55,11 +55,11 @@ void Chain::add_line(std::string & line) {
 // check the chain is valid, once complete
 void Chain::validate() {
   if (target != target_end) {
-    throw std::invalid_argument("target end does not match expectations");
+    throw std::invalid_argument("target end does not match expectations: " + std::to_string(target) + " != " + std::to_string(target_end));
   }
 
   if (query != query_end) {
-    throw std::invalid_argument("query end does not match expectations");
+    throw std::invalid_argument("query end does not match expectations: " + std::to_string(query) + " != " + std::to_string(query_end));
   }
 }
 
