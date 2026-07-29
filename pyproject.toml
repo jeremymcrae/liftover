@@ -3,7 +3,7 @@ requires = ["cython", "setuptools >= 61.0.0", "wheel"]
 
 [project]
 name = 'liftover'
-version = '1.4.0'
+version = '1.4.1'
 description = 'Package for converting between genome build coordinates'
 readme = 'README.md'
 requires-python = '>=3.9'

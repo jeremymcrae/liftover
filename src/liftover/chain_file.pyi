@@ -1,15 +1,14 @@
 import os
 from typing import KeysView
 
-# each match is a (contig, position, strand) tuple, where strand is '+' or '-'
-Match = tuple[str, int, str]
-
 class PyTarget:
     ''' class to hold cpp object for nucleotide position queries
     '''
     def __init__(self) -> None: ...
-    def __getitem__(self, pos: int) -> list[Match]:
+    def __getitem__(self, pos: int) -> list[tuple[str, int, str]]:
         ''' find the coordinate matches for a position on this contig
+
+        each match is a (contig, position, strand) tuple, where strand is '+' or '-'
         '''
         ...
 
