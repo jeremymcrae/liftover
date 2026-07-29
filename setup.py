@@ -6,9 +6,11 @@ import sys
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
-EXTRA_COMPILE_ARGS = ['-std=c++11']
+EXTRA_COMPILE_ARGS = []
 EXTRA_LINK_ARGS = []
-if sys.platform == "darwin":
+if sys.platform == 'linux':
+    EXTRA_COMPILE_ARGS += ['-std=c++11']
+elif sys.platform == "darwin":
     EXTRA_COMPILE_ARGS += [
         "-stdlib=libc++",
         "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
@@ -17,6 +19,8 @@ if sys.platform == "darwin":
     EXTRA_LINK_ARGS += [
         "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib",
         ]
+elif sys.platform == "win32":
+    EXTRA_COMPILE_ARGS += ['/std:c++14']
 
 def get_gzstream_path():
     ''' workaround for building gzstream on windows
