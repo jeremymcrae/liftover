@@ -1,12 +1,12 @@
 [build-system]
-requires = ["cython", "setuptools >= 40.6.0", "wheel"]
+requires = ["cython", "setuptools >= 61.0.0", "wheel"]
 
 [project]
 name = 'liftover'
 version = '1.4.0'
 description = 'Package for converting between genome build coordinates'
 readme = 'README.md'
-requires-python = '>=3.8'
+requires-python = '>=3.9'
 authors = [
     {name = "Jeremy McRae", email = 'jmcrae@illumina.com'},
 ]
@@ -25,6 +25,9 @@ classifiers = [
 packages = [
     'liftover',
 ]
+
+[tool.setuptools.package-data]
+liftover = ['py.typed', '*.pyi']
 
 [project.urls]
 homepage = 'https://github.com/jeremymcrae/liftover'

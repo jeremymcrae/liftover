@@ -4,6 +4,8 @@ include pyproject.toml
 include src/liftover/*.cpp
 include src/liftover/*.py
 include src/liftover/*.pyx
+include src/liftover/*.pyi
+include src/liftover/py.typed
 include src/*.h
 include src/*.cpp
 include src/gzstream/gzstream.C

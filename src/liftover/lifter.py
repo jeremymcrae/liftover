@@ -1,15 +1,17 @@
 
+from __future__ import annotations
+
 import os
 
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
 def get_lifter(target: str,
-               query: str=None,
-               cache: str=None,
+               query: str | None=None,
+               cache: str | None=None,
                one_based: bool=False,
                chain_server: str='https://hgdownload.soe.ucsc.edu',
-               **kwargs):
+               **kwargs) -> ChainFile:
     ''' create a converter to map between genome builds
 
     Args:
