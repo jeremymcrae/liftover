@@ -139,6 +139,28 @@ class TestChainFile(unittest.TestCase):
             mapped = chain['chr1'][6]
             self.assertEqual(mapped[0][1], 21)
 
+    def test_chain_file_no_blank_line_between_chains(self):
+        ''' check multiple chains without separating blank line are all loaded
+        '''
+
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 'chain 0 chr2 10 + 0 10 chr2 10 + 10 30 2\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(path)
+            self.assertEqual(sorted(chain.keys()), ['chr1', 'chr2'])
+            self.assertEqual(chain['chr1'][6][0][1], 21)
+            self.assertEqual(chain['chr2'][6][0][1], 21)
+
     def test_chain_file_longline(self):
         ''' check slightly long chain file lines can be parsed
         '''

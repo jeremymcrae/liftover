@@ -37,6 +37,10 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
       // skip comment lines
       continue;
     } else if (line.substr(0, 5) == "chain") {
+      if (has_chain) {
+        chain.validate();
+        chains[chain.target_id].push_back(chain);
+      }
       chain = Chain(line);
       has_chain = true;
     } else {
