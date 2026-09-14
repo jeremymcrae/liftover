@@ -115,10 +115,26 @@ class TestChainFile(unittest.TestCase):
         ''' check chain file with no chains does not raise UnboundLocalError
         '''
         with tempfile.TemporaryDirectory() as tmp_dir:
-            path = os.path.join(tmp_dir, 'empty.chain.gz')
-            with gzip.open(path, 'wt') as handle:
+            # comments-only file
+            path1 = os.path.join(tmp_dir, 'comments_only.chain.gz')
+            with gzip.open(path1, 'wt') as handle:
                 handle.write('# comment only\n')
+            chain1 = ChainFile(path1)
+            self.assertEqual(list(chain1.keys()), [])
+            self.assertEqual(chain1['chr1'][100], [])
 
-            chain = ChainFile(path)
-            self.assertEqual(list(chain.keys()), [])
-            self.assertEqual(chain['chr1'][100], [])
+            # empty gzip file
+            path2 = os.path.join(tmp_dir, 'empty_gzip.chain.gz')
+            with gzip.open(path2, 'wb') as handle:
+                pass
+            chain2 = ChainFile(path2)
+            self.assertEqual(list(chain2.keys()), [])
+            self.assertEqual(chain2['chr1'][100], [])
+
+            # 0-byte file
+            path3 = os.path.join(tmp_dir, 'zero_bytes.chain.gz')
+            with open(path3, 'wb') as handle:
+                pass
+            chain3 = ChainFile(path3)
+            self.assertEqual(list(chain3.keys()), [])
+            self.assertEqual(chain3['chr1'][100], [])
