@@ -138,3 +138,30 @@ class TestChainFile(unittest.TestCase):
             chain3 = ChainFile(path3)
             self.assertEqual(list(chain3.keys()), [])
             self.assertEqual(chain3['chr1'][100], [])
+
+    def test_get_lifter_url_structure(self):
+        ''' check get_lifter constructs canonical goldenPath URL
+        '''
+        from unittest.mock import patch
+
+        captured_urls = []
+
+        def fake_download(url, dest):
+            captured_urls.append(url)
+            # write minimal chain file so ChainFile can load
+            lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                     '5 0 5\n',
+                     '5 0 5\n',
+                     '\n']
+            with gzip.open(dest, 'wt') as h:
+                h.writelines(lines)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with patch('liftover.lifter.download_file', side_effect=fake_download):
+                get_lifter('hg19', 'hg38', cache=tmp_dir)
+
+        self.assertEqual(
+            captured_urls,
+            ['https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz']
+        )
+

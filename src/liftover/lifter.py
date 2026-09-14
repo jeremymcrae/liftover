@@ -52,7 +52,7 @@ def get_lifter(target: str,
         
         if not os.path.exists(chain_path):
             # if the chain file doesn't exist, download it
-            url = f'{chain_server}/goldenpath/{target}/liftOver/{basename}'
+            url = f'{chain_server}/goldenPath/{target}/liftOver/{basename}'
             download_file(url, chain_path)
 
     return ChainFile(chain_path, one_based=one_based)
