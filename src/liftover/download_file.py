@@ -41,6 +41,14 @@ def _stream_to_file(response: HTTPResponse, dest_path: str, url: str) -> None:
     dirpath = os.path.dirname(os.path.abspath(dest_path))
     fd, tmp_path = tempfile.mkstemp(dir=dirpath)
     try:
+        # mkstemp creates files with 0600 mode; update permissions according to current umask
+        try:
+            current_umask = os.umask(0)
+            os.umask(current_umask)
+            os.chmod(tmp_path, 0o666 & ~current_umask)
+        except OSError:
+            pass
+
         total_bytes = 0
         with os.fdopen(fd, 'wb') as f:
             for chunk in response.stream(65536):

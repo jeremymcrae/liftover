@@ -414,6 +414,41 @@ class TestChainFile(unittest.TestCase):
                 self.assertIn('not a valid gzip file', str(ctx.exception))
                 self.assertFalse(os.path.exists(dest))
 
+    def test_download_file_permissions(self):
+        ''' check downloaded file respects standard umask permissions rather than 0600
+        '''
+        import stat
+        from unittest.mock import patch, MagicMock
+        from liftover.download_file import download_file
+
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            data = b'chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n'
+            # prepare gzipped bytes so verify_file passes
+            import gzip, io
+            bio = io.BytesIO()
+            with gzip.GzipFile(fileobj=bio, mode='wb') as gz:
+                gz.write(data)
+            gz_bytes = bio.getvalue()
+
+            mock_resp.headers = {'Content-Length': str(len(gz_bytes))}
+            mock_resp.stream.return_value = [gz_bytes]
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                download_file('https://example.com/file.gz', dest)
+
+                file_mode = stat.S_IMODE(os.stat(dest).st_mode)
+                cur_umask = os.umask(0)
+                os.umask(cur_umask)
+                expected_mode = 0o666 & ~cur_umask
+                self.assertEqual(file_mode, expected_mode)
+
+
 
 
 
