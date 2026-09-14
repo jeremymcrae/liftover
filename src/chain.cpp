@@ -58,9 +58,9 @@ void Chain::add_line(std::string & line) {
   */
   parse(line, size, target_gap, query_gap);
   
-  Mapped data = Mapped {query, query + size, query_id,
+  Mapped data = Mapped {query, query_id,
     query_strand == "+", query_size};
-  intervals.push_back( Coords {target, target + size, data} );
+  intervals.push_back( Tree::interval(target, target + size, std::move(data)) );
   
   target += size + target_gap;
   query += size + query_gap;
@@ -74,6 +74,19 @@ void Chain::validate() {
 
   if (query != query_end) {
     throw std::invalid_argument("query end does not match expectations: " + std::to_string(query) + " != " + std::to_string(query_end));
+  }
+}
+
+// validate and move intervals to destination chromosome vector
+void Chain::save_to(Tree::interval_vector & dest) {
+  validate();
+  if (dest.empty()) {
+    dest = std::move(intervals);
+  } else {
+    dest.insert(dest.end(),
+                std::make_move_iterator(intervals.begin()),
+                std::make_move_iterator(intervals.end()));
+    intervals.clear();
   }
 }
 

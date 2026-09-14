@@ -29,12 +29,11 @@ class Target {
   
   Currently stores the regions in an interval tree for fast queries.
   */
-  bool one_based=false;
+  bool one_based = false;
   Tree tree;
-  std::string target_id;
 public:
-  Target(std::vector<Chain> & chains, bool _one_based=false);
-  Target() {}
+  Target(Tree::interval_vector ivals, bool _one_based = false);
+  Target() = default;
   Target(Target&&) = default;
   Target& operator=(Target&&) = default;
   Target(const Target&) = default;
@@ -42,10 +41,9 @@ public:
   void swap(Target & other) noexcept {
     std::swap(one_based, other.one_based);
     std::swap(tree, other.tree);
-    std::swap(target_id, other.target_id);
   }
   std::vector<Match> query(std::int64_t pos);
-  std::vector<Match> operator[](std::int64_t pos) {return query(pos);}
+  std::vector<Match> operator[](std::int64_t pos) { return query(pos); }
 };
 
 } //namespace

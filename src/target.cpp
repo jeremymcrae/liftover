@@ -5,30 +5,9 @@
 
 namespace liftover {
 
-Target::Target(std::vector<Chain> & chains, bool _one_based) {
-  /* make set of targets for a single chromosome
-  
-  This uses a vector of chains, all for a given chromosome, and builds an
-  intervaltree for later querying of coordinates.
-  */
-  target_id = chains[0].target_id;
-  Tree::interval_vector intervals;
-  
-  int size = 0;
-  for (const auto & chain : chains) { size += chain.intervals.size(); }
-  intervals.reserve(size);
-  
-  // make intervals for the tree from all regions in all chains
-  for (const auto & chain : chains) {
-    for (const auto & ival: chain.intervals) {
-      intervals.push_back(Tree::interval(ival.start, ival.end, ival.data));
-    }
-    if (target_id != chain.target_id) {
-      throw std::invalid_argument("target ID mismatch");
-    }
-  }
+Target::Target(Tree::interval_vector ivals, bool _one_based) {
   one_based = _one_based;
-  tree = Tree(std::move(intervals));
+  tree = Tree(std::move(ivals));
 }
 
 std::vector<Match> Target::query(std::int64_t pos) {
