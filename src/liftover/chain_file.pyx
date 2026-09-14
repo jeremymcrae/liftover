@@ -45,32 +45,9 @@ cdef class PyTarget():
             matches.append((contig, x.pos, strand))
         return matches
 
-cdef sanitize_prefix(str contig, bool target_prefixed):
-    ''' if we can't find the contig, check if we need to fix the prefix.
-    
-    This is primarily for convenience when dealing with genome builds that omit
-    a 'chr' prefix.
-    '''
-    cdef bool contig_prefixed = contig.startswith('chr')
-    if contig_prefixed and target_prefixed:
-        # both contig and targets use 'chr' prefix
-        return contig
-    elif not contig_prefixed and not target_prefixed:
-        # neither contig nor targets use 'chr' prefix
-        return contig
-    elif contig_prefixed and not target_prefixed:
-        # remove 'chr' prefix, since targets don't use it
-        return contig[3:]
-    elif not contig_prefixed and target_prefixed:
-        # add 'chr' prefix, since targets use it
-        return f'chr{contig}'
-    else:
-        raise ValueError('cannot sanitize contig')
-
 cdef class ChainFile():
     cdef targets
     cdef str path
-    cdef bool target_prefixed
     cdef PyTarget missing_target
     def __cinit__(self, path, target: str='', query: str='', one_based: bool=False):
         ''' 
@@ -96,7 +73,6 @@ cdef class ChainFile():
             tgt.set_target(x.second)
             self.targets[chrom] = tgt
         
-        self.target_prefixed = chrom.startswith('chr')
         self.missing_target = PyTarget()
 
     def __repr__(self):
@@ -107,12 +83,9 @@ cdef class ChainFile():
         '''
         try:
             return self.targets[contig]
-        except KeyError as err:
-            contig = sanitize_prefix(contig, self.target_prefixed)
-            if contig in self.targets:
-                return self.targets[contig]
-            else:
-                return self.missing_target
+        except KeyError:
+            alt = contig[3:] if contig.startswith('chr') else f'chr{contig}'
+            return self.targets.get(alt, self.missing_target)
 
     def query(self, chrom, int64_t pos):
         '''  find the coordinate matches for a genome position

@@ -1,9 +1,11 @@
 
 import gzip
+import os
+import tempfile
 import unittest
 from pathlib import Path
 
-from liftover import get_lifter
+from liftover import get_lifter, ChainFile
 
 
 class TestChainFile(unittest.TestCase):
@@ -76,3 +78,47 @@ class TestChainFile(unittest.TestCase):
         with self.assertRaises(TypeError):
             # can't use string for position
             self.lifter['chr1']['f']
+
+    def test_mixed_prefix(self):
+        ''' check contig lookup works when chain file has mixed prefixes
+        '''
+        lines = [
+            'chain 0 chr1 100 + 0 10 chrA 100 + 10 30 1\n',
+            '5 0 5\n',
+            '5 0 5\n',
+            '\n',
+            'chain 0 2 100 + 0 10 chrB 100 + 10 30 2\n',
+            '5 0 5\n',
+            '5 0 5\n',
+            '\n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'mixed.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(path)
+            # targets in file are 'chr1' and '2'
+            self.assertEqual(sorted(chain.keys()), ['2', 'chr1'])
+
+            # lookups with and without 'chr' prefix should both find the right target
+            self.assertEqual(chain['chr1'][6][0], ('chrA', 21, '+'))
+            self.assertEqual(chain['1'][6][0], ('chrA', 21, '+'))
+            self.assertEqual(chain['2'][6][0], ('chrB', 21, '+'))
+            self.assertEqual(chain['chr2'][6][0], ('chrB', 21, '+'))
+
+            # nonexistent contigs should return empty matches
+            self.assertEqual(chain['chr3'][6], [])
+            self.assertEqual(chain['3'][6], [])
+
+    def test_empty_chain_file(self):
+        ''' check chain file with no chains does not raise UnboundLocalError
+        '''
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'empty.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.write('# comment only\n')
+
+            chain = ChainFile(path)
+            self.assertEqual(list(chain.keys()), [])
+            self.assertEqual(chain['chr1'][100], [])
