@@ -165,3 +165,23 @@ class TestChainFile(unittest.TestCase):
             ['https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz']
         )
 
+    def test_get_lifter_empty_target_or_query(self):
+        ''' check get_lifter raises ValueError when target or query is empty
+        '''
+        with self.assertRaises(ValueError) as context:
+            get_lifter('', 'hg38')
+        self.assertIn('must not be empty', str(context.exception))
+
+        with self.assertRaises(ValueError) as context:
+            get_lifter('hg19', '')
+        self.assertIn('must not be empty', str(context.exception))
+
+        with self.assertRaises(ValueError) as context:
+            get_lifter('   ', 'hg38')
+        self.assertIn('must not be empty', str(context.exception))
+
+        with self.assertRaises(ValueError) as context:
+            get_lifter('hg19', '   ')
+        self.assertIn('must not be empty', str(context.exception))
+
+

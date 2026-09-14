@@ -45,6 +45,10 @@ def get_lifter(target: str,
             raise ValueError('target must be a chain file if no query is provided')
     else:
         # otherwise, construct the chain file path
+        target = target.strip()
+        query = query.strip()
+        if not target or not query:
+            raise ValueError('target and query genome builds must not be empty')
         query = query[0].upper() + query[1:]
         target = target[0].lower() + target[1:]
         basename = '{}To{}.over.chain.gz'.format(target, query)
