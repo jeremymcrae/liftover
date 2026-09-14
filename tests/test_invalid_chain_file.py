@@ -81,6 +81,25 @@ class TestChainFile(unittest.TestCase):
                 ChainFile(path)
             self.assertTrue('invalid alignment line' in context.exception.args[0])
 
+    def test_invalid_chain_file_alignment_before_header(self):
+        ''' check we raise an error when alignment lines appear before any chain header
+        '''
+
+        lines = ['5 0 5\n',
+                 'chain 0 chr1 10 + 0 10 chr1 10 + 10 30 2\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('before chain header' in context.exception.args[0])
+
     def test_chain_file_minimal(self):
         ''' check a minimal chain file is fine
         '''

@@ -44,6 +44,9 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
       chain = Chain(line);
       has_chain = true;
     } else {
+      if (!has_chain) {
+        throw std::invalid_argument("alignment line found before chain header: " + line);
+      }
       chain.add_line(line);
     }
   }
