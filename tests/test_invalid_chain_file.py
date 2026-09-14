@@ -236,3 +236,134 @@ class TestChainFile(unittest.TestCase):
             mapped = chain['chr1'][large - 50]
             self.assertEqual(mapped[0][1], large - 40 + 5)
 
+    def test_invalid_chain_file_header_overflow(self):
+        ''' check header number exceeding 64-bit integer raises ValueError
+        '''
+        large = 2**64
+        lines = [f'chain 0 chr1 {large} + 0 10 chr1 {large} + 0 10 2\n',
+                 '10\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid header line' in context.exception.args[0])
+
+    def test_invalid_chain_file_header_text_in_number(self):
+        ''' check header with letters in numeric field raises ValueError
+        '''
+        lines = ['chain 21270171362 chr1 249250621abc + 10 20 chr1 247249719 + 0 10 2\n',
+                 '10\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid header line' in context.exception.args[0])
+
+    def test_invalid_chain_file_header_negative_coord(self):
+        ''' check header with negative coordinate raises ValueError
+        '''
+        lines = ['chain 21270171362 chr1 249250621 + -10 20 chr1 247249719 + 0 10 2\n',
+                 '10\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid header line' in context.exception.args[0])
+
+    def test_invalid_chain_file_alignment_overflow(self):
+        ''' check alignment line number exceeding 64-bit integer raises ValueError
+        '''
+        large = 2**64
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                 f'{large} 0 0\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid alignment line' in context.exception.args[0])
+
+    def test_invalid_chain_file_negative_size(self):
+        ''' check alignment line with negative size raises ValueError
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                 '-5 0 0\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid alignment line' in context.exception.args[0])
+
+    def test_invalid_chain_file_negative_gap(self):
+        ''' check alignment line with negative gap raises ValueError
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                 '5 -1 0\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid alignment line' in context.exception.args[0])
+
+    def test_invalid_chain_file_zero_size(self):
+        ''' check alignment line with zero size raises ValueError
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                 '0 5 5\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertTrue('invalid alignment line' in context.exception.args[0])
+
+    def test_chain_file_trailing_whitespace_final_line(self):
+        ''' check alignment line with trailing whitespace on final line is accepted
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 30 + 10 30 2\n',
+                 '5 0 10\n',
+                 '5 \n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][6][0][1], 26)
+
+

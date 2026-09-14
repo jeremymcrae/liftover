@@ -1,5 +1,4 @@
 
-#include <cstdlib>
 #include <stdexcept>
 
 #include "chain.h"
@@ -12,27 +11,25 @@ inline void parse(std::string & line, std::int64_t & size, std::int64_t & target
   line: an alignment line e.g. '5000\t10\t5' or '5000' Most lines have 3 items
     (size, reference delta, query delta), but the final line has only one (size).
   */
-  char * end;
   const char * ptr = line.c_str();
-  size = std::strtoll(ptr, &end, 10);
-  if (end == ptr) {
+  // parse the alignment block size (must be >= 1)
+  if (!parse_int64(ptr, size, 1)) {
     throw std::invalid_argument("invalid alignment line: " + line);
   }
 
-  if (*end != '\0') {
-    // if there are more items, parse the target and query gaps
-    ptr = end;
-    target_gap = std::strtoll(ptr, &end, 10);
-    // check that we parsed a valid number
-    if (end == ptr) {
+  // skip any whitespace between items
+  while (*ptr == ' ' || *ptr == '\t') {
+    ptr++;
+  }
+
+  if (*ptr != '\0') {
+    // if there are more items, parse the target gap
+    if (!parse_int64(ptr, target_gap, 0)) {
       throw std::invalid_argument("invalid alignment line: " + line);
     }
 
-    // move on to the final item
-    ptr = end;
-    query_gap = std::strtoll(ptr, &end, 10);
-    // and check again that we parsed a valid number
-    if (end == ptr) {
+    // move on to the final item (query gap)
+    if (!parse_int64(ptr, query_gap, 0)) {
       throw std::invalid_argument("invalid alignment line: " + line);
     }
   } else {
