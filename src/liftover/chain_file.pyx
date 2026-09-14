@@ -97,7 +97,37 @@ cdef class ChainFile():
         '''
         return self[chrom][pos]
 
+    def __contains__(self, contig):
+        ''' check whether a contig is present in the chain file
+        '''
+        if not isinstance(contig, str):
+            return False
+        if contig in self.targets:
+            return True
+        alt = contig[3:] if contig.startswith('chr') else f'chr{contig}'
+        return alt in self.targets
+
+    def __iter__(self):
+        ''' iterate over contig names
+        '''
+        return iter(self.targets)
+
+    def __len__(self):
+        ''' return the number of contigs in the chain file
+        '''
+        return len(self.targets)
+
     def keys(self):
         ''' get contig names which can be converted from
         '''
         return self.targets.keys()
+
+    def values(self):
+        ''' get Target objects for each contig
+        '''
+        return self.targets.values()
+
+    def items(self):
+        ''' get (contig, Target) pairs
+        '''
+        return self.targets.items()

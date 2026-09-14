@@ -44,13 +44,38 @@ class TestChainFile(unittest.TestCase):
         ''' check the lifter object has a keys() method
         '''
         self.assertTrue('keys' in dir(self.lifter))
+
+    def test_mapping_interface(self):
+        ''' check mapping protocol: in, iter, len, values, items
+        '''
+        # __contains__ with and without 'chr' prefix
+        self.assertTrue('chr1' in self.lifter)
+        self.assertTrue('1' in self.lifter)
+        self.assertFalse('chrjhsdjkhsdgf' in self.lifter)
+        self.assertFalse(123 in self.lifter)
+
+        # __len__
+        self.assertGreater(len(self.lifter), 0)
+        self.assertEqual(len(self.lifter), len(self.lifter.keys()))
+
+        # __iter__
+        keys_from_iter = list(self.lifter)
+        self.assertEqual(keys_from_iter, list(self.lifter.keys()))
+
+        # values() and items()
+        values = list(self.lifter.values())
+        self.assertEqual(len(values), len(self.lifter))
+        items = list(self.lifter.items())
+        self.assertEqual(len(items), len(self.lifter))
+        self.assertIs(items[0][1], self.lifter[items[0][0]])
     
     def test_missing_contig(self):
         ''' check we handle missing contigs corectly
         '''
         target = self.lifter['chr1']
         missing_contig = 'chrjhsdjkhsdgf'
-        assert missing_contig not in self.lifter.keys()
+        self.assertTrue(missing_contig not in self.lifter)
+        self.assertTrue(missing_contig not in self.lifter.keys())
         
         # make sure if we access a contig that does not exist in the lifter 
         # object, it still returns a PyTarget object

@@ -1,5 +1,5 @@
 import os
-from typing import KeysView
+from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 
 class PyTarget:
     ''' class to hold cpp object for nucleotide position queries
@@ -50,3 +50,14 @@ class ChainFile:
         ''' get contig names which can be converted from
         '''
         ...
+    def values(self) -> ValuesView[PyTarget]:
+        ''' get Target objects for each contig
+        '''
+        ...
+    def items(self) -> ItemsView[str, PyTarget]:
+        ''' get (contig, Target) pairs
+        '''
+        ...
+    def __contains__(self, contig: object) -> bool: ...
+    def __iter__(self) -> Iterator[str]: ...
+    def __len__(self) -> int: ...
