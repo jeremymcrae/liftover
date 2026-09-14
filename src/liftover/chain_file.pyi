@@ -38,11 +38,11 @@ class ChainFile:
         ''' get the Target object for a target chromosome
         '''
         ...
-    def query(self, chrom: str, pos: int) -> list[Match]:
+    def query(self, chrom: str, pos: int) -> list[tuple[str, int, str]]:
         ''' find the coordinate matches for a genome position
         '''
         ...
-    def convert_coordinate(self, chrom: str, pos: int) -> list[Match]:
+    def convert_coordinate(self, chrom: str, pos: int) -> list[tuple[str, int, str]]:
         ''' find the coordinate matches for a genome position (from pyliftover API)
         '''
         ...

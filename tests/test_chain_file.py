@@ -307,6 +307,17 @@ class TestChainFile(unittest.TestCase):
             chain_direct = ChainFile(chain_path)
             self.assertEqual(chain_direct['chr1'][6][0], ('chr1', 21, '+'))
 
+    def test_pyi_stub_validity(self):
+        ''' check that the pyi stub file has no undefined symbols
+        '''
+        stub_path = Path(__file__).parent.parent / 'src' / 'liftover' / 'chain_file.pyi'
+        with open(stub_path) as f:
+            code = f.read()
+        # executing the stub in an empty global dict verifies all type annotations resolve
+        env = {}
+        exec(code, env)
+
+
 
 
 
