@@ -366,4 +366,53 @@ class TestChainFile(unittest.TestCase):
             chain = ChainFile(path)
             self.assertEqual(chain['chr1'][6][0][1], 26)
 
+    def test_chain_file_header_multiple_spaces(self):
+        ''' check header with runs of multiple spaces between fields is accepted
+        '''
+        lines = ['chain  0   chr1  10  +   0  10   chr1  30  +   10  30   2\n',
+                 '5 0 10\n',
+                 '5\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][6][0][1], 26)
+
+    def test_chain_file_header_mixed_tabs_spaces(self):
+        ''' check header with mixed tabs and spaces between fields is accepted
+        '''
+        lines = ['chain\t0 chr1\t10 + 0\t10 chr1\t30 + 10\t30 2\n',
+                 '5 0 10\n',
+                 '5\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][6][0][1], 26)
+
+    def test_chain_file_header_trailing_whitespace(self):
+        ''' check header with trailing whitespace is accepted
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 30 + 10 30 2 \t \n',
+                 '5 0 10\n',
+                 '5\n',
+                 '\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as handle:
+                handle.writelines(lines)
+
+            chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][6][0][1], 26)
+
+
 

@@ -18,12 +18,7 @@ static std::int64_t parse_header_int(const std::string & s, const std::string & 
 ChainHeader process_header(std::string & line) {
   /* process the header, and performs simple sanity checks
   */
-  std::vector<std::string> hdr;
-  if (line.find("\t") != std::string::npos) {
-    hdr = split(line, '\t');
-  } else if (line.find(" ") != std::string::npos) {
-    hdr = split(line, ' ');
-  }
+  std::vector<std::string> hdr = split(line);
 
   if (hdr.size() != 13) {
     throw std::invalid_argument("invalid header line: " + line);

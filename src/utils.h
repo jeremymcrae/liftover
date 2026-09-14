@@ -33,7 +33,7 @@ inline bool parse_int64(const char *& ptr, std::int64_t & out, std::int64_t min_
   return true;
 }
 
-std::vector<std::string> split(const std::string &s, char delim);
+std::vector<std::string> split(const std::string &s);
 
 } // namespace
 
