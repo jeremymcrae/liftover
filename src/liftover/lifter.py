@@ -11,26 +11,31 @@ def get_lifter(target: str | os.PathLike[str],
                cache: str | os.PathLike[str] | None=None,
                one_based: bool=False,
                chain_server: str='https://hgdownload.soe.ucsc.edu',
-               **kwargs) -> ChainFile:
+               cache_dir: str | os.PathLike[str] | None=None) -> ChainFile:
     ''' create a converter to map between genome builds
 
     Args:
         target: genome build to convert from e.g. 'hg19' or path to chain file
         query: genome build to convert to e.g. 'hg38' or None if target is a chain file
         cache: path to cache folder, defaults to ~/.liftover
+        one_based: whether coordinates are one-based (defaults to False)
         chain_server: url to server with chain files. This allows for mirrors of
             the UCSC chain files, but they need to adhere to the UCSC url structure
             e.g. https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz
             or https://www.example.org/folder/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz
+        cache_dir: alternative parameter for cache folder (matches pyliftover API)
 
     Returns:
         A ChainFile object capable of converting genome coordinates from the
         target genome to the query genome.
     '''
 
-    # check for cache directory in kwargs (matches pyliftover interface)
-    if 'cache_dir' in kwargs:
-        cache = kwargs['cache_dir']
+    # handle cache_dir parameter (matches pyliftover interface)
+    if cache is not None and cache_dir is not None:
+        raise ValueError("cannot specify both 'cache' and 'cache_dir'")
+
+    if cache is None:
+        cache = cache_dir
 
     if cache is None:
         cache = os.path.expanduser('~/.liftover')

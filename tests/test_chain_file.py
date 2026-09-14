@@ -207,5 +207,26 @@ class TestChainFile(unittest.TestCase):
                 get_lifter('hg19', cache=cache_path)
             self.assertTrue(cache_path.exists())
 
+    def test_get_lifter_cache_kwargs(self):
+        ''' check get_lifter rejects conflicting cache args and unknown kwargs
+        '''
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # cache_dir alone works
+            cache_path = Path(tmp_dir) / 'cache_dir_only'
+            with self.assertRaises(ValueError):
+                get_lifter('hg19', cache_dir=cache_path)
+            self.assertTrue(cache_path.exists())
+
+            # specifying both cache and cache_dir raises ValueError
+            with self.assertRaises(ValueError) as context:
+                get_lifter('hg19', 'hg38', cache=tmp_dir, cache_dir=tmp_dir)
+            self.assertIn("cannot specify both 'cache' and 'cache_dir'", str(context.exception))
+
+            # unexpected keyword arguments raise TypeError
+            with self.assertRaises(TypeError) as context:
+                get_lifter('hg19', 'hg38', one_baseed=True)
+            self.assertIn("unexpected keyword argument", str(context.exception))
+
+
 
 
