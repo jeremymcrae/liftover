@@ -317,6 +317,46 @@ class TestChainFile(unittest.TestCase):
         env = {}
         exec(code, env)
 
+    def test_download_file_timeout(self):
+        ''' check download_file passes timeout and handles timeout exceptions cleanly
+        '''
+        from unittest.mock import patch, MagicMock
+        import urllib3
+        from liftover.download_file import download_file
+
+        # verify timeout parameter is passed to http.request
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_response = MagicMock()
+            mock_response.status = 200
+            mock_response.stream.return_value = [b'data']
+            mock_pool.request.return_value = mock_response
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'dest.txt')
+                download_file('https://example.com/file', dest, timeout=12.5)
+
+            mock_pool.request.assert_called_once_with(
+                'GET', 'https://example.com/file', preload_content=False, timeout=12.5
+            )
+            mock_pool.clear.assert_called_once()
+
+        # verify timeout error is converted to ValueError
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_pool.request.side_effect = urllib3.exceptions.TimeoutError("connection timed out")
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'dest.txt')
+                with self.assertRaises(ValueError) as context:
+                    download_file('https://example.com/file', dest, timeout=5.0)
+                self.assertIn("problem accessing", str(context.exception))
+                self.assertIn("timed out", str(context.exception))
+            mock_pool.clear.assert_called_once()
+
+
 
 
 
