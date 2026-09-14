@@ -187,6 +187,8 @@ class TestChainFile(unittest.TestCase):
     def test_get_lifter_pathlib(self):
         ''' check get_lifter accepts Path objects for chain file path and cache
         '''
+        from unittest.mock import patch
+
         lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
                  '5 0 5\n',
                  '5 0 5\n',
@@ -200,21 +202,34 @@ class TestChainFile(unittest.TestCase):
             lifter = get_lifter(chain_path)
             self.assertEqual(lifter['chr1'][6][0], ('chr1', 21, '+'))
 
-            # test passing Path as cache directory
+            # test passing Path as cache directory when downloading
+            def fake_download(url, dest):
+                with gzip.open(dest, 'wt') as h:
+                    h.writelines(lines)
+
             cache_path = Path(tmp_dir) / 'cache'
-            with self.assertRaises(ValueError):
-                # invalid target name, but cache dir path should be processed without error
-                get_lifter('hg19', cache=cache_path)
+            with patch('liftover.lifter.download_file', side_effect=fake_download):
+                get_lifter('hg19', 'hg38', cache=cache_path)
             self.assertTrue(cache_path.exists())
 
     def test_get_lifter_cache_kwargs(self):
         ''' check get_lifter rejects conflicting cache args and unknown kwargs
         '''
+        from unittest.mock import patch
+
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 '\n']
+        def fake_download(url, dest):
+            with gzip.open(dest, 'wt') as h:
+                h.writelines(lines)
+
         with tempfile.TemporaryDirectory() as tmp_dir:
             # cache_dir alone works
             cache_path = Path(tmp_dir) / 'cache_dir_only'
-            with self.assertRaises(ValueError):
-                get_lifter('hg19', cache_dir=cache_path)
+            with patch('liftover.lifter.download_file', side_effect=fake_download):
+                get_lifter('hg19', 'hg38', cache_dir=cache_path)
             self.assertTrue(cache_path.exists())
 
             # specifying both cache and cache_dir raises ValueError
@@ -226,6 +241,22 @@ class TestChainFile(unittest.TestCase):
             with self.assertRaises(TypeError) as context:
                 get_lifter('hg19', 'hg38', one_baseed=True)
             self.assertIn("unexpected keyword argument", str(context.exception))
+
+    def test_get_lifter_no_cache_created_for_local_chain(self):
+        ''' check get_lifter does not create cache directory when target is a local chain file
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 '\n']
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            chain_path = Path(tmp_dir) / 'test.chain.gz'
+            with gzip.open(chain_path, 'wt') as h:
+                h.writelines(lines)
+
+            unused_cache = Path(tmp_dir) / 'should_not_exist'
+            get_lifter(chain_path, cache=unused_cache)
+            self.assertFalse(unused_cache.exists())
 
 
 

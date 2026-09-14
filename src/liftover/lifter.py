@@ -34,16 +34,6 @@ def get_lifter(target: str | os.PathLike[str],
     if cache is not None and cache_dir is not None:
         raise ValueError("cannot specify both 'cache' and 'cache_dir'")
 
-    if cache is None:
-        cache = cache_dir
-
-    if cache is None:
-        cache = os.path.expanduser('~/.liftover')
-    else:
-        cache = os.path.expanduser(os.fspath(cache))
-
-    os.makedirs(cache, exist_ok=True)
-
     if query is None:
         # if no query is provided, assume the target is a chain file
         chain_path = os.fspath(target)
@@ -55,12 +45,22 @@ def get_lifter(target: str | os.PathLike[str],
         query = query.strip()
         if not target or not query:
             raise ValueError('target and query genome builds must not be empty')
+
+        if cache is None:
+            cache = cache_dir
+
+        if cache is None:
+            cache = os.path.expanduser('~/.liftover')
+        else:
+            cache = os.path.expanduser(os.fspath(cache))
+
         query = query[0].upper() + query[1:]
         target = target[0].lower() + target[1:]
         basename = '{}To{}.over.chain.gz'.format(target, query)
         chain_path = os.path.join(cache, basename)
         
         if not os.path.exists(chain_path):
+            os.makedirs(cache, exist_ok=True)
             # if the chain file doesn't exist, download it
             url = f'{chain_server}/goldenPath/{target}/liftOver/{basename}'
             download_file(url, chain_path)
