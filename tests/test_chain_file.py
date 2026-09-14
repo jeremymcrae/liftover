@@ -258,6 +258,31 @@ class TestChainFile(unittest.TestCase):
             get_lifter(chain_path, cache=unused_cache)
             self.assertFalse(unused_cache.exists())
 
+    def test_get_lifter_uncompressed_chain(self):
+        ''' check get_lifter accepts uncompressed .chain files
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 '\n']
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            chain_path = os.path.join(tmp_dir, 'test.chain')
+            with open(chain_path, 'wt') as h:
+                h.writelines(lines)
+
+            # test as string path
+            lifter_str = get_lifter(chain_path)
+            self.assertEqual(lifter_str['chr1'][6][0], ('chr1', 21, '+'))
+
+            # test as Path object
+            lifter_path = get_lifter(Path(chain_path))
+            self.assertEqual(lifter_path['chr1'][6][0], ('chr1', 21, '+'))
+
+            # test directly via ChainFile
+            chain_direct = ChainFile(chain_path)
+            self.assertEqual(chain_direct['chr1'][6][0], ('chr1', 21, '+'))
+
+
 
 
 

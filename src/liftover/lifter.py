@@ -37,7 +37,7 @@ def get_lifter(target: str | os.PathLike[str],
     if query is None:
         # if no query is provided, assume the target is a chain file
         chain_path = os.fspath(target)
-        if not chain_path.endswith('.chain.gz'):
+        if not chain_path.endswith(('.chain.gz', '.chain')):
             raise ValueError('target must be a chain file if no query is provided')
     else:
         # otherwise, construct the chain file path
