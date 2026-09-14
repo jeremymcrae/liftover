@@ -1,10 +1,25 @@
 #include <cstring>
 #include <stdexcept>
+#include <sys/stat.h>
 #include <zlib.h>
 
 #include "chain_file.h"
 
 namespace liftover {
+
+static bool is_directory(const char *path) {
+  struct stat st;
+  if (stat(path, &st) == 0) {
+#if defined(S_ISDIR)
+    return S_ISDIR(st.st_mode);
+#elif defined(_S_IFDIR)
+    return (st.st_mode & _S_IFDIR) != 0;
+#else
+    return false;
+#endif
+  }
+  return false;
+}
 
 class GzReader {
   gzFile file;
@@ -57,6 +72,10 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   This builds a map of Targets, indexed by chromosome, so we can quickly select
   the Target of interest when querying a given coordinate.
   */
+  if (is_directory(path.c_str())) {
+    throw std::invalid_argument("cannot open directory as chain file: " + path);
+  }
+
   GzReader infile(path.c_str());
   if (!infile.is_open()) {
     throw std::invalid_argument("cannot open chain file at " + path);

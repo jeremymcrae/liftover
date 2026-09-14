@@ -459,6 +459,27 @@ class TestChainFile(unittest.TestCase):
             with self.assertRaises(ValueError):
                 ChainFile(corrupt_path)
 
+    def test_invalid_chain_file_directory(self):
+        ''' check passing a directory path to ChainFile raises ValueError
+        '''
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with self.assertRaises(ValueError) as context:
+                ChainFile(tmp_dir)
+            self.assertIn('cannot open directory as chain file', str(context.exception))
+
+    def test_get_lifter_directory_target(self):
+        ''' check passing a directory path as chain file target to get_lifter raises ValueError
+        '''
+        from liftover import get_lifter
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            dir_target = os.path.join(tmp_dir, 'fake.chain.gz')
+            os.mkdir(dir_target)
+            with self.assertRaises(ValueError) as context:
+                get_lifter(dir_target)
+            self.assertIn('target must be a chain file', str(context.exception))
+
+
 
 
 
