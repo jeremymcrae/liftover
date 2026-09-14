@@ -356,6 +356,64 @@ class TestChainFile(unittest.TestCase):
                 self.assertIn("timed out", str(context.exception))
             mock_pool.clear.assert_called_once()
 
+    def test_download_file_verification(self):
+        ''' check download_file verifies content length, empty payloads, and gzip integrity
+        '''
+        from unittest.mock import patch, MagicMock
+        from liftover.download_file import download_file
+
+        # 1. Content-Length mismatch
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_resp.headers = {'Content-Length': '1000'}
+            mock_resp.stream.return_value = [b'short data']
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                with self.assertRaises(ValueError) as ctx:
+                    download_file('https://example.com/file.gz', dest)
+                self.assertIn('incomplete download', str(ctx.exception))
+                self.assertFalse(os.path.exists(dest))
+
+        # 2. Empty response
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_resp.headers = {}
+            mock_resp.stream.return_value = []
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                with self.assertRaises(ValueError) as ctx:
+                    download_file('https://example.com/file.gz', dest)
+                self.assertIn('empty response', str(ctx.exception))
+                self.assertFalse(os.path.exists(dest))
+
+        # 3. Non-gzip payload (e.g. HTML 200 error page)
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            html_payload = b'<html>404 Not Found</html>'
+            mock_resp.headers = {'Content-Length': str(len(html_payload))}
+            mock_resp.stream.return_value = [html_payload]
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                with self.assertRaises(ValueError) as ctx:
+                    download_file('https://example.com/file.gz', dest)
+                self.assertIn('not a valid gzip file', str(ctx.exception))
+                self.assertFalse(os.path.exists(dest))
+
 
 
 
