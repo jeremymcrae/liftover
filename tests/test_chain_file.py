@@ -548,6 +548,94 @@ class TestChainFile(unittest.TestCase):
         self.assertTrue(len(liftover.__version__) > 0)
         self.assertIn('__version__', liftover.__all__)
 
+    def test_default_cache_dir_xdg(self):
+        ''' check default_cache_dir returns XDG cache location
+        '''
+        from unittest.mock import patch
+        from liftover import default_cache_dir
+
+        cache_dir = default_cache_dir()
+        self.assertTrue(cache_dir.endswith('liftover'))
+
+        # test XDG_CACHE_HOME override
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with patch.dict(os.environ, {'XDG_CACHE_HOME': tmp_dir}):
+                xdg_cache = default_cache_dir()
+                self.assertEqual(xdg_cache, os.path.join(tmp_dir, 'liftover'))
+
+    def test_get_lifter_legacy_cache_fallback(self):
+        ''' check get_lifter falls back to ~/.liftover when present
+        '''
+        from unittest.mock import patch
+        from liftover import default_cache_dir
+
+        lines = [
+            'chain 0 chr1 100 + 0 10 chrA 100 + 10 30 1\n',
+            '5 0 5\n',
+            '5 0 5\n',
+            '\n'
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            new_cache = os.path.join(tmp_dir, 'new_cache')
+            legacy_dir = os.path.join(tmp_dir, 'legacy_liftover')
+            os.makedirs(legacy_dir, exist_ok=True)
+            legacy_file = os.path.join(legacy_dir, 'hg19ToHg38.over.chain.gz')
+            with gzip.open(legacy_file, 'wt') as h:
+                h.writelines(lines)
+
+            def fake_expanduser(path):
+                if path == '~/.liftover':
+                    return legacy_dir
+                return os.path.expanduser(path)
+
+            download_mock = unittest.mock.MagicMock()
+
+            with patch('liftover.lifter.default_cache_dir', return_value=new_cache), \
+                 patch('os.path.expanduser', side_effect=fake_expanduser), \
+                 patch('liftover.lifter.download_file', download_mock):
+                lifter = get_lifter('hg19', 'hg38')
+
+            # Should use legacy file without downloading
+            self.assertEqual(lifter['chr1'][6][0], ('chrA', 21, '+'))
+            download_mock.assert_not_called()
+            self.assertFalse(os.path.exists(new_cache))
+
+    def test_get_lifter_downloads_to_new_cache(self):
+        ''' check get_lifter downloads to default cache when legacy cache is absent
+        '''
+        from unittest.mock import patch
+
+        lines = [
+            'chain 0 chr1 100 + 0 10 chrA 100 + 10 30 1\n',
+            '5 0 5\n',
+            '5 0 5\n',
+            '\n'
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            new_cache = os.path.join(tmp_dir, 'new_cache')
+            empty_legacy_dir = os.path.join(tmp_dir, 'empty_legacy')
+
+            def fake_download(url, dest):
+                with gzip.open(dest, 'wt') as h:
+                    h.writelines(lines)
+
+            def fake_expanduser(path):
+                if path == '~/.liftover':
+                    return empty_legacy_dir
+                return os.path.expanduser(path)
+
+            with patch('liftover.lifter.default_cache_dir', return_value=new_cache), \
+                 patch('os.path.expanduser', side_effect=fake_expanduser), \
+                 patch('liftover.lifter.download_file', side_effect=fake_download):
+                lifter = get_lifter('hg19', 'hg38')
+
+            self.assertEqual(lifter['chr1'][6][0], ('chrA', 21, '+'))
+            # Verified downloaded to new_cache
+            self.assertTrue(os.path.exists(os.path.join(new_cache, 'hg19ToHg38.over.chain.gz')))
+
+
 
 
 
