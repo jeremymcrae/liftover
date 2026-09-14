@@ -48,7 +48,6 @@ ext = [
               extra_link_args=EXTRA_LINK_ARGS,
               sources=sources,
               include_dirs=include_dirs,
-              library_dirs=['src/', 'src/intervaltree/'],
               libraries=libs,
               language='c++'),
     ]
