@@ -78,7 +78,7 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
     } else if (line[0] == '#') {
       // skip comment lines
       continue;
-    } else if (line.substr(0, 5) == "chain") {
+    } else if (line.compare(0, 6, "chain ") == 0 || line.compare(0, 6, "chain\t") == 0) {
       if (has_chain) {
         chain.save_to(chrom_intervals[chain.target_id]);
       }

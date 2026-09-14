@@ -478,6 +478,26 @@ class TestChainFile(unittest.TestCase):
             self.assertEqual(lifter_1['chr1'][10], [])
             self.assertEqual(lifter_1['chr1'][21], [])
 
+    def test_chain_header_prefix_does_not_match_non_headers(self):
+        ''' check that non-header lines starting with chainfoo are treated as alignment lines
+        '''
+        # If 'chainfoo' were treated as a header line, it would throw an invalid header line error
+        # Instead, it is an invalid alignment line
+        lines = [
+            'chain 0 chr1 100 + 10 20 chrA 100 + 100 110 1\n',
+            'chainfoo 10 10\n',
+            '\n'
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(lines)
+
+            with self.assertRaises(ValueError) as context:
+                ChainFile(path)
+            self.assertIn('invalid alignment line', str(context.exception))
+
+
 
 
 
