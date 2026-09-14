@@ -497,6 +497,16 @@ class TestChainFile(unittest.TestCase):
                 ChainFile(path)
             self.assertIn('invalid alignment line', str(context.exception))
 
+    def test_module_version_and_name(self):
+        ''' check module __version__ is defined and __name__ is not overwritten
+        '''
+        import liftover
+        self.assertEqual(lifter_module_name := liftover.__name__, 'liftover')
+        self.assertIsInstance(liftover.__version__, str)
+        self.assertTrue(len(liftover.__version__) > 0)
+        self.assertIn('__version__', liftover.__all__)
+
+
 
 
 
