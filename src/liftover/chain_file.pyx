@@ -2,6 +2,7 @@
 
 import os
 
+from cython.operator cimport dereference as deref, preincrement as inc
 from libc.stdint cimport int64_t
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -18,6 +19,7 @@ cdef extern from 'target.h' namespace 'liftover':
     Target() except +
     vector[Match] query(int64_t)
     vector[Match] operator[](int64_t)
+    void swap(Target &)
 
 cdef extern from 'chain_file.h' namespace 'liftover':
   map[string, Target] open_chainfile(string, bool) except+
@@ -26,9 +28,8 @@ cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
     '''
     cdef Target thisptr
-    cdef Match x
-    cdef set_target(self, Target target):
-        self.thisptr = target
+    cdef set_target(self, Target & target):
+        self.thisptr.swap(target)
     def __getitem__(self, int64_t pos):
         cpp_matches = self.thisptr[pos]
         # optimization for the most common case
@@ -67,11 +68,14 @@ cdef class ChainFile():
         # c++ Target object each time we query in a chromosome.
         self.targets = {}
         cdef map[string, Target] chainfile = open_chainfile(self.path.encode('utf8'), one_based)
-        for x in chainfile:
-            chrom = x.first.decode('utf8')
+        cdef map[string, Target].iterator it = chainfile.begin()
+        cdef PyTarget tgt
+        while it != chainfile.end():
+            chrom = deref(it).first.decode('utf8')
             tgt = PyTarget()
-            tgt.set_target(x.second)
+            tgt.set_target(deref(it).second)
             self.targets[chrom] = tgt
+            inc(it)
         
         self.missing_target = PyTarget()
 

@@ -35,6 +35,15 @@ class Target {
 public:
   Target(std::vector<Chain> & chains, bool _one_based=false);
   Target() {}
+  Target(Target&&) = default;
+  Target& operator=(Target&&) = default;
+  Target(const Target&) = default;
+  Target& operator=(const Target&) = default;
+  void swap(Target & other) noexcept {
+    std::swap(one_based, other.one_based);
+    std::swap(tree, other.tree);
+    std::swap(target_id, other.target_id);
+  }
   std::vector<Match> query(std::int64_t pos);
   std::vector<Match> operator[](std::int64_t pos) {return query(pos);}
 };

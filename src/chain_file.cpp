@@ -60,7 +60,7 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   // convert list of intervals into interval trees for each chromosome
   std::map<std::string, Target> targets;
   for (auto & x : chains) {
-    targets[x.first] = Target(x.second, one_based);
+    targets.emplace(std::move(x.first), Target(x.second, one_based));
   }
   return targets;
 }
