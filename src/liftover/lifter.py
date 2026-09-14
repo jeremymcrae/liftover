@@ -62,7 +62,8 @@ def get_lifter(target: str | os.PathLike[str],
         if not os.path.exists(chain_path):
             os.makedirs(cache, exist_ok=True)
             # if the chain file doesn't exist, download it
-            url = f'{chain_server}/goldenPath/{target}/liftOver/{basename}'
+            server = chain_server.rstrip('/')
+            url = f'{server}/goldenPath/{target}/liftOver/{basename}'
             download_file(url, chain_path)
 
     return ChainFile(chain_path, one_based=one_based)

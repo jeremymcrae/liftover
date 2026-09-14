@@ -190,6 +190,32 @@ class TestChainFile(unittest.TestCase):
             ['https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz']
         )
 
+    def test_get_lifter_chain_server_trailing_slash(self):
+        ''' check get_lifter strips trailing slashes from chain_server
+        '''
+        from unittest.mock import patch
+
+        captured_urls = []
+
+        def fake_download(url, dest):
+            captured_urls.append(url)
+            lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                     '5 0 5\n',
+                     '5 0 5\n',
+                     '\n']
+            with gzip.open(dest, 'wt') as h:
+                h.writelines(lines)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with patch('liftover.lifter.download_file', side_effect=fake_download):
+                get_lifter('hg19', 'hg38', cache=tmp_dir, chain_server='https://example.org/mirror///')
+
+        self.assertEqual(
+            captured_urls,
+            ['https://example.org/mirror/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz']
+        )
+
+
     def test_get_lifter_empty_target_or_query(self):
         ''' check get_lifter raises ValueError when target or query is empty
         '''
