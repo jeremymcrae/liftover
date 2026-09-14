@@ -82,5 +82,4 @@ ext = [
 setup(package_dir={'': 'src'},
       ext_modules=cythonize(ext),
       cmdclass={'build_ext': BuildExt},
-      test_loader='unittest:TestLoader',
       )
