@@ -8,13 +8,12 @@ namespace liftover {
 
 class GzReader {
   gzFile file;
+  std::string path;
   char buffer[65536];
   int buf_len = 0;
   int buf_pos = 0;
 public:
-  explicit GzReader(const char *path) {
-    file = gzopen(path, "rb");
-  }
+  explicit GzReader(const char *path) : file(gzopen(path, "rb")), path(path) {}
   ~GzReader() {
     if (file) {
       gzclose(file);
@@ -29,6 +28,11 @@ public:
         buf_len = gzread(file, buffer, sizeof(buffer));
         buf_pos = 0;
         if (buf_len <= 0) {
+          int errnum = 0;
+          const char *msg = gzerror(file, &errnum);
+          if (buf_len < 0 || (errnum != Z_OK && errnum != Z_STREAM_END)) {
+            throw std::invalid_argument(msg && *msg ? msg : "error reading chain file: " + path);
+          }
           return !line.empty();
         }
       }

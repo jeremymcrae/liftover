@@ -414,5 +414,51 @@ class TestChainFile(unittest.TestCase):
             chain = ChainFile(path)
             self.assertEqual(chain['chr1'][6][0][1], 26)
 
+    def test_invalid_chain_file_truncated_gzip(self):
+        ''' check truncated gzip chain file raises ValueError
+        '''
+        lines = ['chain 0 chr1 1000 + 0 1000 chrA 1000 + 0 1000 1\n']
+        for _ in range(100):
+            lines.append('10 0 0\n')
+        lines.append('10\n\n')
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            valid_path = os.path.join(tmp_dir, 'valid.chain.gz')
+            with gzip.open(valid_path, 'wt') as h:
+                h.writelines(lines)
+
+            with open(valid_path, 'rb') as f:
+                data = f.read()
+            trunc_path = os.path.join(tmp_dir, 'trunc.chain.gz')
+            with open(trunc_path, 'wb') as h:
+                h.write(data[:len(data) // 2])
+
+            with self.assertRaises(ValueError):
+                ChainFile(trunc_path)
+
+    def test_invalid_chain_file_corrupt_gzip(self):
+        ''' check corrupt gzip chain file raises ValueError
+        '''
+        lines = ['chain 0 chr1 1000 + 0 1000 chrA 1000 + 0 1000 1\n']
+        for _ in range(100):
+            lines.append('10 0 0\n')
+        lines.append('10\n\n')
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            valid_path = os.path.join(tmp_dir, 'valid.chain.gz')
+            with gzip.open(valid_path, 'wt') as h:
+                h.writelines(lines)
+
+            with open(valid_path, 'rb') as f:
+                data = f.read()
+            corrupt_path = os.path.join(tmp_dir, 'corrupt.chain.gz')
+            mid = len(data) // 2
+            with open(corrupt_path, 'wb') as h:
+                h.write(data[:mid] + b'corrupted_bytes_1234' + data[mid + 20:])
+
+            with self.assertRaises(ValueError):
+                ChainFile(corrupt_path)
+
+
 
 
