@@ -310,12 +310,28 @@ class TestChainFile(unittest.TestCase):
     def test_pyi_stub_validity(self):
         ''' check that the pyi stub file has no undefined symbols
         '''
+        import ast
+        import builtins
+
         stub_path = Path(__file__).parent.parent / 'src' / 'liftover' / 'chain_file.pyi'
         with open(stub_path) as f:
             code = f.read()
-        # executing the stub in an empty global dict verifies all type annotations resolve
+
         env = {}
         exec(code, env)
+
+        tree = ast.parse(code)
+        known = set(dir(builtins)) | set(env.keys()) | {'self'}
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if node.returns:
+                    for sub in ast.walk(node.returns):
+                        if isinstance(sub, ast.Name):
+                            self.assertIn(sub.id, known)
+            elif isinstance(node, ast.arg) and node.annotation:
+                for sub in ast.walk(node.annotation):
+                    if isinstance(sub, ast.Name):
+                        self.assertIn(sub.id, known)
 
     def test_download_file_timeout(self):
         ''' check download_file passes timeout and handles timeout exceptions cleanly
