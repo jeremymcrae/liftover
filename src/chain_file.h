@@ -5,8 +5,6 @@
 #include <string>
 #include <map>
 
-#include "gzstream/gzstream.h"
-
 #include "chain.h"
 #include "target.h"
 

@@ -32,4 +32,4 @@ int main() {
 // g++ -Weverything -Wno-padded -Wno-c++98-compat -stdlib=libc++ -std=c++11  \
 //      -fsanitize=undefined,address \
 //      -lz \
-//      main.cpp chain_file.cpp chain.cpp headers.cpp target.cpp utils.cpp gzstream/gzstream.C
+//      main.cpp chain_file.cpp chain.cpp headers.cpp target.cpp utils.cpp
