@@ -4,6 +4,7 @@ import os
 import sys
 
 from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
 from Cython.Build import cythonize
 
 EXTRA_COMPILE_ARGS = []
@@ -22,44 +23,36 @@ elif sys.platform == "darwin":
 elif sys.platform == "win32":
     EXTRA_COMPILE_ARGS += ['/std:c++14']
 
-def get_gzstream_path():
-    ''' workaround for building gzstream on windows
+class BuildExt(build_ext):
+    ''' Custom build_ext to prepare gzstream without mutating tracked sources.
 
-    cython on windows didn't like the .C extension for gzstream. This just
-    renames the file (on windows only), and returns the relative path.
-    '''
-    gzstream_path = 'src/gzstream/gzstream.C'
-    if sys.platform == 'win32':
-        gzstream_win_path = 'src/gzstream/gzstream.cpp'
-        try:
-            os.rename(gzstream_path, gzstream_win_path)
-        except FileNotFoundError:
-            pass  # avoid error on github actions
-        gzstream_path = gzstream_win_path
-    return gzstream_path
+    gzstream.C includes <gzstream.h>, which fails on macOS clang if src/gzstream
+    is in include_dirs because clang confuses src/gzstream/version with the
+    standard library <version> header. Additionally, Windows compilers do not
+    recognize the .C extension as C++.
 
-def scrub_gzstream():
-    ''' workaround for compilation error on macos
-    
-    compiling gzstream requires the corresponding gzstream.h file, but if we 
-    include the gzstream directory in the include dirs, then clang complains
-    about the version file in the gzstream folder. If we remove the gzstream
-    directory from the include dirs, then clang complains about the missing
-    gzstream.h. This is because gzstream.C identifies it's header file with
-    angle brackets. Replacing the angle brackets in that line seems to work.
+    We generate a temporary gzstream.cpp in the build directory with the header
+    path adjusted, leaving the tracked submodule completely untouched.
     '''
-    with open(get_gzstream_path(), 'rt') as handle:
-        lines = handle.readlines()
-    
-    with open(get_gzstream_path(), 'wt') as handle:
-        for line in lines:
-            if line == '#include <gzstream.h>\n':
-                line = '#include "gzstream.h"\n'
-            handle.write(line)
+    def build_extension(self, ext):
+        os.makedirs(self.build_temp, exist_ok=True)
+        dest_cpp = os.path.join(self.build_temp, 'gzstream.cpp')
+        src_c = os.path.join('src', 'gzstream', 'gzstream.C')
+
+        with open(src_c, 'rt') as f:
+            content = f.read()
+
+        content = content.replace('#include <gzstream.h>', '#include "gzstream/gzstream.h"')
+
+        with open(dest_cpp, 'wt') as f:
+            f.write(content)
+
+        ext.sources = [dest_cpp if s == src_c else s for s in ext.sources]
+        super().build_extension(ext)
 
 sources = [
     'src/liftover/chain_file.pyx',
-    get_gzstream_path(),
+    'src/gzstream/gzstream.C',
     'src/chain.cpp',
     'src/utils.cpp',
     'src/headers.cpp',
@@ -75,8 +68,6 @@ if sys.platform == 'win32':
     include_dirs.append('src/zlib/')
     libs = []
 
-scrub_gzstream()
-
 ext = [
     Extension('liftover.chain_file',
               extra_compile_args=EXTRA_COMPILE_ARGS,
@@ -90,5 +81,6 @@ ext = [
 
 setup(package_dir={'': 'src'},
       ext_modules=cythonize(ext),
+      cmdclass={'build_ext': BuildExt},
       test_loader='unittest:TestLoader',
       )
