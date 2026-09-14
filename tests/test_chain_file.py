@@ -184,4 +184,28 @@ class TestChainFile(unittest.TestCase):
             get_lifter('hg19', '   ')
         self.assertIn('must not be empty', str(context.exception))
 
+    def test_get_lifter_pathlib(self):
+        ''' check get_lifter accepts Path objects for chain file path and cache
+        '''
+        lines = ['chain 0 chr1 10 + 0 10 chr1 10 + 10 30 1\n',
+                 '5 0 5\n',
+                 '5 0 5\n',
+                 '\n']
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            chain_path = Path(tmp_dir) / 'test.chain.gz'
+            with gzip.open(chain_path, 'wt') as h:
+                h.writelines(lines)
+
+            # test passing Path as target
+            lifter = get_lifter(chain_path)
+            self.assertEqual(lifter['chr1'][6][0], ('chr1', 21, '+'))
+
+            # test passing Path as cache directory
+            cache_path = Path(tmp_dir) / 'cache'
+            with self.assertRaises(ValueError):
+                # invalid target name, but cache dir path should be processed without error
+                get_lifter('hg19', cache=cache_path)
+            self.assertTrue(cache_path.exists())
+
+
 

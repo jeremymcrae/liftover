@@ -6,9 +6,9 @@ import os
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
-def get_lifter(target: str,
+def get_lifter(target: str | os.PathLike[str],
                query: str | None=None,
-               cache: str | None=None,
+               cache: str | os.PathLike[str] | None=None,
                one_based: bool=False,
                chain_server: str='https://hgdownload.soe.ucsc.edu',
                **kwargs) -> ChainFile:
@@ -34,18 +34,19 @@ def get_lifter(target: str,
 
     if cache is None:
         cache = os.path.expanduser('~/.liftover')
+    else:
+        cache = os.path.expanduser(os.fspath(cache))
 
     os.makedirs(cache, exist_ok=True)
 
     if query is None:
         # if no query is provided, assume the target is a chain file
-        if target.endswith('.chain.gz'):    
-            chain_path = target
-        else:
+        chain_path = os.fspath(target)
+        if not chain_path.endswith('.chain.gz'):
             raise ValueError('target must be a chain file if no query is provided')
     else:
         # otherwise, construct the chain file path
-        target = target.strip()
+        target = str(target).strip()
         query = query.strip()
         if not target or not query:
             raise ValueError('target and query genome builds must not be empty')
