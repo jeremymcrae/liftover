@@ -14,7 +14,9 @@ std::vector<Match> Target::query(std::int64_t pos) {
   /* find coordinates matching a specific site
   */
   // if lifting one-based coordinates, shift the pos to lift to zero-based
-  pos -= (std::uint64_t) one_based;
+  if (one_based) {
+    pos -= 1;
+  }
   
   std::vector<Match> matches;
   matches.reserve(1);
@@ -29,7 +31,9 @@ std::vector<Match> Target::query(std::int64_t pos) {
       remapped = mapped.size - remapped - 1;
     }
     // if lifting one-based coordinates, shift the lifted position to one-based
-    remapped += (std::uint64_t) one_based;
+    if (one_based) {
+      remapped += 1;
+    }
     
     matches.push_back( Match {mapped.query_id, remapped, mapped.fwd_strand});
   }

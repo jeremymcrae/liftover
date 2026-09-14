@@ -448,6 +448,37 @@ class TestChainFile(unittest.TestCase):
                 expected_mode = 0o666 & ~cur_umask
                 self.assertEqual(file_mode, expected_mode)
 
+    def test_one_based_coordinate_lifting(self):
+        ''' check one_based=True lifts 1-based coordinates correctly compared to 0-based
+        '''
+        lines = [
+            'chain 0 chr1 100 + 10 20 chrA 100 + 100 110 1\n',
+            '10\n',
+            '\n'
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'test.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(lines)
+
+            lifter_0 = ChainFile(path, one_based=False)
+            lifter_1 = ChainFile(path, one_based=True)
+
+            # In 0-based: [10, 20) -> [100, 110)
+            self.assertEqual(lifter_0['chr1'][10], [('chrA', 100, '+')])
+            self.assertEqual(lifter_0['chr1'][15], [('chrA', 105, '+')])
+            self.assertEqual(lifter_0['chr1'][19], [('chrA', 109, '+')])
+            self.assertEqual(lifter_0['chr1'][9], [])
+            self.assertEqual(lifter_0['chr1'][20], [])
+
+            # In 1-based: [11, 21) -> [101, 111)
+            self.assertEqual(lifter_1['chr1'][11], [('chrA', 101, '+')])
+            self.assertEqual(lifter_1['chr1'][16], [('chrA', 106, '+')])
+            self.assertEqual(lifter_1['chr1'][20], [('chrA', 110, '+')])
+            self.assertEqual(lifter_1['chr1'][10], [])
+            self.assertEqual(lifter_1['chr1'][21], [])
+
+
 
 
 
