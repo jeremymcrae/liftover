@@ -12,9 +12,9 @@ from liftover.download_file import download_file
 def default_cache_dir() -> str:
     ''' get the standard user cache directory for liftover (XDG on Unix/macOS) '''
     if sys.platform == 'win32':
-        return platformdirs.user_cache_dir('liftover', appauthor=False)
+        return os.path.normpath(platformdirs.user_cache_dir('liftover', appauthor=False, opinion=False))
     from platformdirs.unix import Unix
-    return Unix('liftover').user_cache_dir
+    return os.path.normpath(Unix('liftover').user_cache_dir)
 
 def get_lifter(target: str | os.PathLike[str],
                query: str | None=None,

@@ -1,6 +1,7 @@
 
 import gzip
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -555,13 +556,14 @@ class TestChainFile(unittest.TestCase):
         from liftover import default_cache_dir
 
         cache_dir = default_cache_dir()
-        self.assertTrue(cache_dir.endswith('liftover'))
+        self.assertEqual(os.path.basename(os.path.normpath(cache_dir)), 'liftover')
 
-        # test XDG_CACHE_HOME override
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with patch.dict(os.environ, {'XDG_CACHE_HOME': tmp_dir}):
-                xdg_cache = default_cache_dir()
-                self.assertEqual(xdg_cache, os.path.join(tmp_dir, 'liftover'))
+        # test XDG_CACHE_HOME override on non-Windows platforms
+        if sys.platform != 'win32':
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                with patch.dict(os.environ, {'XDG_CACHE_HOME': tmp_dir}):
+                    xdg_cache = default_cache_dir()
+                    self.assertEqual(os.path.normpath(xdg_cache), os.path.normpath(os.path.join(tmp_dir, 'liftover')))
 
     def test_get_lifter_legacy_cache_fallback(self):
         ''' check get_lifter falls back to ~/.liftover when present
