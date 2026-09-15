@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = 'liftover'
-version = '1.4.1'
+version = '1.5.0'
 description = 'Package for converting between genome build coordinates'
 readme = 'README.md'
 license = "MIT"
