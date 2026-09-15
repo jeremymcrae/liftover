@@ -61,8 +61,9 @@ cdef class PyTarget():
             matches.append((<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus))
         return matches
 
-    def __getitem__(self, int64_t pos):
-        return self.query_fast(pos)
+    def __getitem__(self, pos):
+        cdef int64_t c_pos = pos
+        return self.query_fast(c_pos)
 
 cdef class ChainFile():
     cdef dict targets
