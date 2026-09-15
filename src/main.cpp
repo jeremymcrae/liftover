@@ -10,7 +10,8 @@
 int main() {
   // load liftover chain file
   std::string path = "/home/jmcrae/.liftover/hg38ToHg19.over.chain.gz";
-  std::map<std::string, liftover::Target> targets = liftover::open_chainfile(path);
+  liftover::ChainFileResult result = liftover::open_chainfile(path);
+  auto & targets = result.targets;
   
   // search for a given coordinate
   std::string chrom = "chr1";
@@ -22,7 +23,7 @@ int main() {
     }
 
     for (auto x : targets[chrom][pos]) {
-      std::cout << x.contig << " pos: " << x.pos << ", on fwd:"
+      std::cout << result.query_names[x.query_id_idx] << " pos: " << x.pos << ", on fwd:"
                 << x.fwd_strand << std::endl;
     }
   }

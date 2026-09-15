@@ -10,7 +10,12 @@
 
 namespace liftover {
 
-std::map<std::string, Target> open_chainfile(std::string path, bool one_based=false);
+struct ChainFileResult {
+  std::map<std::string, Target> targets;
+  std::vector<std::string> query_names;
+};
+
+ChainFileResult open_chainfile(std::string path, bool one_based=false);
 
 }
 

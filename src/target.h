@@ -15,7 +15,7 @@ typedef IntervalTree<std::int64_t, Mapped> Tree;
 
 struct Match {
   // hold info for a matched site after a successful query
-  std::string contig;
+  std::uint32_t query_id_idx;
   std::int64_t pos;
   bool fwd_strand;
 };

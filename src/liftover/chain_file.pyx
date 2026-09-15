@@ -3,7 +3,7 @@
 import os
 
 from cython.operator cimport dereference as deref, preincrement as inc
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint32_t
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.map cimport map
@@ -11,7 +11,7 @@ from libcpp cimport bool
 
 cdef extern from 'target.h' namespace 'liftover':
   cdef struct Match:
-    string contig
+    uint32_t query_id_idx
     int64_t pos
     bool fwd_strand
 
@@ -22,34 +22,55 @@ cdef extern from 'target.h' namespace 'liftover':
     void swap(Target &)
 
 cdef extern from 'chain_file.h' namespace 'liftover':
-  map[string, Target] open_chainfile(string, bool) except+
+  cdef struct ChainFileResult:
+    map[string, Target] targets
+    vector[string] query_names
+
+  ChainFileResult open_chainfile(string, bool) except+
 
 cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
     '''
     cdef Target thisptr
-    cdef set_target(self, Target & target):
+    cdef list query_contigs
+    cdef str strand_plus
+    cdef str strand_minus
+
+    def __cinit__(self):
+        self.strand_plus = '+'
+        self.strand_minus = '-'
+        self.query_contigs = []
+
+    cdef set_target(self, Target & target, list query_contigs):
         self.thisptr.swap(target)
-    def __getitem__(self, int64_t pos):
-        cpp_matches = self.thisptr[pos]
+        self.query_contigs = query_contigs
+
+    cdef list query_fast(self, int64_t pos):
+        cdef vector[Match] cpp_matches = self.thisptr[pos]
+        cdef Match x
         # optimization for the most common case
         if cpp_matches.size() == 1:
             x = cpp_matches[0]
-            contig = x.contig.decode('utf8')
-            strand = '+' if x.fwd_strand else '-'
-            return [(contig, x.pos, strand)]
+            return [(<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus)]
 
-        matches = []
+        if cpp_matches.empty():
+            return []
+
+        cdef list matches = []
         for x in cpp_matches:
-            contig = x.contig.decode('utf8')
-            strand = '+' if x.fwd_strand else '-'
-            matches.append((contig, x.pos, strand))
+            matches.append((<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus))
         return matches
 
+    def __getitem__(self, int64_t pos):
+        return self.query_fast(pos)
+
 cdef class ChainFile():
-    cdef targets
+    cdef dict targets
+    cdef dict lookup
     cdef str path
     cdef PyTarget missing_target
+    cdef list query_contigs
+
     def __cinit__(self, path, target: str='', query: str='', one_based: bool=False):
         ''' 
         open the chain file for lifting coordinates
@@ -67,17 +88,34 @@ cdef class ChainFile():
         # dictionary, as accessing this is much faster than converting the
         # c++ Target object each time we query in a chromosome.
         self.targets = {}
-        cdef map[string, Target] chainfile = open_chainfile(self.path.encode('utf8'), one_based)
-        cdef map[string, Target].iterator it = chainfile.begin()
+        self.lookup = {}
+        cdef ChainFileResult res = open_chainfile(self.path.encode('utf8'), one_based)
+        
+        # Pre-decode unique query chromosome names into Python str objects once
+        self.query_contigs = [name.decode('utf8') for name in res.query_names]
+
+        cdef map[string, Target].iterator it = res.targets.begin()
         cdef PyTarget tgt
-        while it != chainfile.end():
+        cdef str chrom
+        while it != res.targets.end():
             chrom = deref(it).first.decode('utf8')
             tgt = PyTarget()
-            tgt.set_target(deref(it).second)
+            tgt.set_target(deref(it).second, self.query_contigs)
             self.targets[chrom] = tgt
             inc(it)
+
+        # Build fast lookup dictionary: exact keys first
+        for chrom, tgt in self.targets.items():
+            self.lookup[chrom] = tgt
+
+        # Add alternate prefix keys (e.g. '1' -> 'chr1' target, or 'chr1' -> '1' target)
+        for chrom, tgt in self.targets.items():
+            alt = chrom[3:] if chrom.startswith('chr') else f'chr{chrom}'
+            if alt not in self.lookup:
+                self.lookup[alt] = tgt
         
         self.missing_target = PyTarget()
+        self.missing_target.query_contigs = self.query_contigs
 
     def __repr__(self):
         return f'ChainFile("{self.path}")'
@@ -85,31 +123,30 @@ cdef class ChainFile():
     def __getitem__(self, str contig):
         ''' get the Target object for a target chromosome
         '''
-        try:
-            return self.targets[contig]
-        except KeyError:
-            alt = contig[3:] if contig.startswith('chr') else f'chr{contig}'
-            return self.targets.get(alt, self.missing_target)
+        return self.lookup.get(contig, self.missing_target)
 
-    def query(self, chrom, int64_t pos):
+    def query(self, str chrom, int64_t pos):
         '''  find the coordinate matches for a genome position
         '''
-        return self[chrom][pos]
+        cdef PyTarget tgt = <PyTarget>self.lookup.get(chrom)
+        if tgt is not None:
+            return tgt.query_fast(pos)
+        return []
 
-    def convert_coordinate(self, chrom, int64_t pos):
+    def convert_coordinate(self, str chrom, int64_t pos):
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''
-        return self[chrom][pos]
+        cdef PyTarget tgt = <PyTarget>self.lookup.get(chrom)
+        if tgt is not None:
+            return tgt.query_fast(pos)
+        return []
 
     def __contains__(self, contig):
         ''' check whether a contig is present in the chain file
         '''
         if not isinstance(contig, str):
             return False
-        if contig in self.targets:
-            return True
-        alt = contig[3:] if contig.startswith('chr') else f'chr{contig}'
-        return alt in self.targets
+        return contig in self.lookup
 
     def __iter__(self):
         ''' iterate over contig names

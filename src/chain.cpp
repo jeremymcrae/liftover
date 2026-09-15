@@ -38,11 +38,18 @@ inline void parse(std::string & line, std::int64_t & size, std::int64_t & target
   }
 }
 
-Chain::Chain(std::string & header_line) {
+Chain::Chain(std::string & header_line, std::vector<std::string> & query_names, std::unordered_map<std::string, std::uint32_t> & query_indices) {
   ChainHeader header = process_header(header_line);
   target_id = header.target_id;
   target = header.target_start;
-  query_id = header.query_id;
+  auto it = query_indices.find(header.query_id);
+  if (it == query_indices.end()) {
+    query_id_idx = static_cast<std::uint32_t>(query_names.size());
+    query_indices[header.query_id] = query_id_idx;
+    query_names.push_back(header.query_id);
+  } else {
+    query_id_idx = it->second;
+  }
   query = header.query_start;
   query_strand = header.query_strand;
   query_size = header.query_size;
@@ -58,8 +65,7 @@ void Chain::add_line(std::string & line) {
   */
   parse(line, size, target_gap, query_gap);
   
-  Mapped data = Mapped {query, query_id,
-    query_strand == "+", query_size};
+  Mapped data = Mapped {query, query_size, query_id_idx, query_strand == "+"};
   intervals.push_back( Tree::interval(target, target + size, std::move(data)) );
   
   target += size + target_gap;

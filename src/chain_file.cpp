@@ -1,6 +1,8 @@
 #include <cstring>
 #include <stdexcept>
 #include <sys/stat.h>
+#include <unordered_map>
+#include <vector>
 #include <zlib.h>
 
 #include "chain_file.h"
@@ -66,7 +68,7 @@ public:
   }
 };
 
-std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
+ChainFileResult open_chainfile(std::string path, bool one_based) {
   /* open a gzipped liftover chain file, and parses contents
   
   This builds a map of Targets, indexed by chromosome, so we can quickly select
@@ -83,6 +85,8 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
 
   std::string line;
   std::map<std::string, Tree::interval_vector> chrom_intervals;
+  std::vector<std::string> query_names;
+  std::unordered_map<std::string, std::uint32_t> query_indices;
   Chain chain;
   bool has_chain = false;
 
@@ -105,7 +109,7 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
       if (has_chain) {
         chain.save_to(chrom_intervals[chain.target_id]);
       }
-      chain = Chain(line);
+      chain = Chain(line, query_names, query_indices);
       has_chain = true;
     } else {
       if (!has_chain) {
@@ -125,7 +129,7 @@ std::map<std::string, Target> open_chainfile(std::string path, bool one_based) {
   for (auto & x : chrom_intervals) {
     targets.emplace(x.first, Target(std::move(x.second), one_based));
   }
-  return targets;
+  return ChainFileResult {std::move(targets), std::move(query_names)};
 }
 
 } //namespace

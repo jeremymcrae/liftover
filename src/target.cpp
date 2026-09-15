@@ -20,11 +20,11 @@ std::vector<Match> Target::query(std::int64_t pos) {
   
   std::vector<Match> matches;
   matches.reserve(1);
-  for (auto & region : tree.findOverlapping(pos, pos)) {
+  tree.visit_overlapping(pos, [&](const Tree::interval & region) {
     if (pos == region.stop) {
-      continue;
+      return;
     }
-    Mapped & mapped = region.value;
+    const Mapped & mapped = region.value;
     std::int64_t offset = pos - region.start;
     std::int64_t remapped = mapped.start + offset;
     if (!mapped.fwd_strand) {
@@ -35,8 +35,8 @@ std::vector<Match> Target::query(std::int64_t pos) {
       remapped += 1;
     }
     
-    matches.push_back( Match {mapped.query_id, remapped, mapped.fwd_strand});
-  }
+    matches.push_back(Match {mapped.query_id_idx, remapped, mapped.fwd_strand});
+  });
   return matches;
 }
 
