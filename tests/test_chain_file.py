@@ -14,7 +14,9 @@ class TestChainFile(unittest.TestCase):
     '''
     @classmethod
     def setUpClass(self):
-        self.lifter = get_lifter('hg19', 'hg38')
+        # CI sets LIFTOVER_TEST_CACHE to a pre-fetched chain file folder, to
+        # avoid every job downloading from UCSC
+        self.lifter = get_lifter('hg19', 'hg38', cache=os.environ.get('LIFTOVER_TEST_CACHE'))
 
     def test_points(self):
         ''' compare to conversions found using UCSC liftover webtool
