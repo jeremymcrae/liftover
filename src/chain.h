@@ -12,9 +12,10 @@
 namespace liftover {
 
 struct Mapped {
-  // holds where a liftover region maps across to
+  // holds where a liftover region maps across to. For reverse-strand chains,
+  // start is precomputed as (query_size - 1 - query_start) so queries only
+  // add or subtract the offset without storing query_size per interval.
   std::int64_t start;
-  std::int64_t size;
   std::uint32_t query_id_idx;
   bool fwd_strand;
 };

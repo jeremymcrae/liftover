@@ -65,8 +65,10 @@ void Chain::add_line(std::string & line) {
   */
   parse(line, size, target_gap, query_gap);
   
-  Mapped data = Mapped {query, query_size, query_id_idx, query_strand == "+"};
-  intervals.push_back( Tree::interval(target, target + size, std::move(data)) );
+  bool fwd = query_strand == "+";
+  std::int64_t mapped_start = fwd ? query : query_size - 1 - query;
+  Mapped data = Mapped {mapped_start, query_id_idx, fwd};
+  intervals.push_back( Tree::interval(target, target + size, data) );
   
   target += size + target_gap;
   query += size + query_gap;

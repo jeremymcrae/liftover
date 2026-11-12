@@ -11,8 +11,8 @@ from libcpp cimport bool
 
 cdef extern from 'target.h' namespace 'liftover':
   cdef struct Match:
-    uint32_t query_id_idx
     int64_t pos
+    uint32_t query_id_idx
     bool fwd_strand
 
   cdef cppclass MatchBuffer:

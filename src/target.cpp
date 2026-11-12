@@ -26,16 +26,13 @@ void Target::query(std::int64_t pos, MatchBuffer & matches) const {
     }
     const Mapped & mapped = region.value;
     std::int64_t offset = pos - region.start;
-    std::int64_t remapped = mapped.start + offset;
-    if (!mapped.fwd_strand) {
-      remapped = mapped.size - remapped - 1;
-    }
+    std::int64_t remapped = mapped.fwd_strand ? mapped.start + offset : mapped.start - offset;
     // if lifting one-based coordinates, shift the lifted position to one-based
     if (one_based) {
       remapped += 1;
     }
     
-    matches.push_back(Match {mapped.query_id_idx, remapped, mapped.fwd_strand});
+    matches.push_back(Match {remapped, mapped.query_id_idx, mapped.fwd_strand});
   });
 }
 
