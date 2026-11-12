@@ -20,6 +20,37 @@ struct Match {
   bool fwd_strand;
 };
 
+struct MatchBuffer {
+  // stack-friendly buffer avoiding heap allocation for typical (<= 4) matches
+  enum : std::size_t { INLINE_CAP = 4 };
+  Match inline_matches[INLINE_CAP];
+  std::vector<Match> extra;
+  std::size_t count = 0;
+
+  void clear() {
+    count = 0;
+    if (!extra.empty()) {
+      extra.clear();
+    }
+  }
+
+  void push_back(const Match & m) {
+    if (count < INLINE_CAP) {
+      inline_matches[count] = m;
+    } else {
+      extra.push_back(m);
+    }
+    ++count;
+  }
+
+  std::size_t size() const { return count; }
+  bool empty() const { return count == 0; }
+
+  const Match & operator[](std::size_t i) const {
+    return i < INLINE_CAP ? inline_matches[i] : extra[i - INLINE_CAP];
+  }
+};
+
 class Target {
   /* converts the vector of chains for a single chromosome for quick queries
   
@@ -42,8 +73,9 @@ public:
     std::swap(one_based, other.one_based);
     std::swap(tree, other.tree);
   }
-  std::vector<Match> query(std::int64_t pos);
-  std::vector<Match> operator[](std::int64_t pos) { return query(pos); }
+  void query(std::int64_t pos, MatchBuffer & matches) const;
+  std::vector<Match> query(std::int64_t pos) const;
+  std::vector<Match> operator[](std::int64_t pos) const { return query(pos); }
 };
 
 } //namespace

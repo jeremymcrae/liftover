@@ -15,10 +15,14 @@ cdef extern from 'target.h' namespace 'liftover':
     int64_t pos
     bool fwd_strand
 
+  cdef cppclass MatchBuffer:
+    Match inline_matches[4]
+    size_t size() const
+    const Match & operator[](size_t) const
+
   cdef cppclass Target:
     Target() except +
-    vector[Match] query(int64_t)
-    vector[Match] operator[](int64_t)
+    void query(int64_t, MatchBuffer &) const
     void swap(Target &)
 
 cdef extern from 'chain_file.h' namespace 'liftover':
@@ -46,18 +50,22 @@ cdef class PyTarget():
         self.query_contigs = query_contigs
 
     cdef list query_fast(self, int64_t pos):
-        cdef vector[Match] cpp_matches = self.thisptr[pos]
+        cdef MatchBuffer cpp_matches
+        self.thisptr.query(pos, cpp_matches)
+        cdef size_t n = cpp_matches.size()
         cdef Match x
-        # optimization for the most common case
-        if cpp_matches.size() == 1:
-            x = cpp_matches[0]
+        # optimization for the most common cases
+        if n == 1:
+            x = cpp_matches.inline_matches[0]
             return [(<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus)]
 
-        if cpp_matches.empty():
+        if n == 0:
             return []
 
         cdef list matches = []
-        for x in cpp_matches:
+        cdef size_t i
+        for i in range(n):
+            x = cpp_matches[i]
             matches.append((<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus))
         return matches
 

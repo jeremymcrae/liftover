@@ -10,16 +10,16 @@ Target::Target(Tree::interval_vector ivals, bool _one_based) {
   tree = Tree(std::move(ivals));
 }
 
-std::vector<Match> Target::query(std::int64_t pos) {
-  /* find coordinates matching a specific site
+void Target::query(std::int64_t pos, MatchBuffer & matches) const {
+  /* find coordinates matching a specific site without heap allocation for <= 4 hits
   */
+  matches.clear();
+
   // if lifting one-based coordinates, shift the pos to lift to zero-based
   if (one_based) {
     pos -= 1;
   }
   
-  std::vector<Match> matches;
-  matches.reserve(1);
   tree.visit_overlapping(pos, [&](const Tree::interval & region) {
     if (pos == region.stop) {
       return;
@@ -37,6 +37,18 @@ std::vector<Match> Target::query(std::int64_t pos) {
     
     matches.push_back(Match {mapped.query_id_idx, remapped, mapped.fwd_strand});
   });
+}
+
+std::vector<Match> Target::query(std::int64_t pos) const {
+  MatchBuffer buf;
+  query(pos, buf);
+  std::vector<Match> matches;
+  if (!buf.empty()) {
+    matches.reserve(buf.size());
+    for (std::size_t i = 0; i < buf.size(); ++i) {
+      matches.push_back(buf[i]);
+    }
+  }
   return matches;
 }
 

@@ -639,14 +639,40 @@ class TestChainFile(unittest.TestCase):
             # Verified downloaded to new_cache
             self.assertTrue(os.path.exists(os.path.join(new_cache, 'hg19ToHg38.over.chain.gz')))
 
+    def test_multiple_overlapping_matches(self):
+        ''' check positions matching multiple overlapping chains (inline and >4 overflow)
+        '''
+        lines = []
+        for idx in range(6):
+            q_start = 100 * (idx + 1)
+            lines.extend([
+                f'chain 0 chr1 100 + 10 30 chrQ{idx} 1000 + {q_start} {q_start + 20} {idx + 1}\n',
+                '20\n',
+                '\n',
+            ])
+        # Also add a chain covering only [10, 20) so pos=25 has 6 matches and pos=15 has 7
+        lines.extend([
+            'chain 0 chr1 100 + 10 20 chrExtra 1000 - 50 60 7\n',
+            '10\n',
+            '\n',
+        ])
 
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'multi.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(lines)
 
+            chain = ChainFile(path)
+            matches_25 = chain['chr1'][25]
+            self.assertEqual(len(matches_25), 6)
+            self.assertEqual(
+                sorted(matches_25),
+                sorted((f'chrQ{i}', 100 * (i + 1) + 15, '+') for i in range(6)),
+            )
 
-
-
-
-
-
+            matches_15 = chain['chr1'][15]
+            self.assertEqual(len(matches_15), 7)
+            self.assertIn(('chrExtra', 1000 - 55 - 1, '-'), matches_15)
 
 
 
