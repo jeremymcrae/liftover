@@ -711,5 +711,71 @@ class TestChainFile(unittest.TestCase):
             self.assertEqual(chain['chr1'][999], [('chrOuter', 1989, '+')])
             self.assertEqual(chain['chr1'][1000], [])
 
+    def test_download_file_midstream_errors_and_status(self):
+        ''' check mid-stream urllib3 errors, HTTP status codes, and decode_content handling
+        '''
+        import io
+        from unittest.mock import patch, MagicMock
+        import urllib3
+        from liftover.download_file import download_file
+
+        # 1. Mid-stream ReadTimeoutError / ProtocolError wrapped as ValueError and cleans temp file
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_resp.headers = {}
+
+            def broken_stream(*args, **kwargs):
+                yield b'partial'
+                raise urllib3.exceptions.ReadTimeoutError(mock_pool, 'https://example.com/f.gz', 'read timed out')
+
+            mock_resp.stream.side_effect = broken_stream
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                with self.assertRaises(ValueError) as ctx:
+                    download_file('https://example.com/f.gz', dest)
+                self.assertIn('problem downloading', str(ctx.exception))
+                self.assertEqual(os.listdir(tmp_dir), [])
+
+        # 2. Non-200 HTTP status includes status code
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 404
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                with self.assertRaises(ValueError) as ctx:
+                    download_file('https://example.com/f.gz', dest)
+                self.assertIn('HTTP 404', str(ctx.exception))
+
+        # 3. .gz downloads pass decode_content=False and never call os.umask
+        bio = io.BytesIO()
+        with gzip.GzipFile(fileobj=bio, mode='wb') as gz:
+            gz.write(b'chain 0 chr1 10 + 0 10 chr1 10 + 0 10 1\n10\n\n')
+        gz_bytes = bio.getvalue()
+
+        with patch('urllib3.PoolManager') as mock_pm, \
+             patch('os.umask', side_effect=AssertionError('os.umask should not be called')):
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_resp.headers = {'Content-Length': str(len(gz_bytes)), 'Content-Encoding': 'gzip'}
+            mock_resp.stream.return_value = [gz_bytes]
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain.gz')
+                download_file('https://example.com/f.gz', dest)
+                mock_resp.stream.assert_called_once_with(65536, decode_content=False)
+                self.assertTrue(os.path.exists(dest))
+
 
 
