@@ -77,6 +77,13 @@ ChainHeader process_header(const std::string & line) {
   if (hdr[9].len != 1 || (hdr[9].ptr[0] != '+' && hdr[9].ptr[0] != '-')) {
     throw std::invalid_argument("query strand is not '+' or '-': " + line);
   }
+  bool fwd_strand = hdr[9].ptr[0] == '+';
+  if (target_start > target_end || query_start > query_end) {
+    throw std::invalid_argument("invalid header coordinates: " + line);
+  }
+  if (!fwd_strand && query_end > query_size) {
+    throw std::invalid_argument("invalid header coordinates: " + line);
+  }
 
   return ChainHeader {
     score,
@@ -88,7 +95,7 @@ ChainHeader process_header(const std::string & line) {
     query_size,
     query_start,
     query_end,
-    hdr[9].ptr[0] == '+',
+    fwd_strand,
   };
 }
 

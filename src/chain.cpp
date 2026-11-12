@@ -67,6 +67,12 @@ void Chain::add_line(const std::string & line) {
   std::int64_t target_gap = 0;
   std::int64_t query_gap = 0;
   parse(line, size, target_gap, query_gap);
+  if (size > target_end - target || target_gap > target_end - target - size) {
+    throw std::invalid_argument("target alignment exceeds header target_end: " + line);
+  }
+  if (size > query_end - query || query_gap > query_end - query - size) {
+    throw std::invalid_argument("query alignment exceeds header query_end: " + line);
+  }
   
   std::int64_t mapped_start = fwd_strand ? query : query_size - 1 - query;
   Mapped data = Mapped {mapped_start, query_id_idx, fwd_strand};

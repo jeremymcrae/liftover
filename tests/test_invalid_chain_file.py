@@ -485,7 +485,59 @@ class TestChainFile(unittest.TestCase):
                 get_lifter(dir_target)
             self.assertIn('target must be a chain file', str(context.exception))
 
+    def test_invalid_header_coordinate_bounds(self):
+        ''' check inverted or out-of-bounds header coordinates raise ValueError
+        '''
+        bad_headers = [
+            # target_start > target_end
+            'chain 0 chr1 100 + 50 40 chrA 100 + 0 10 1\n0\n\n',
+            # query_start > query_end
+            'chain 0 chr1 100 + 0 10 chrA 100 + 50 40 1\n10\n\n',
+            # query_end > query_size on reverse strand (would produce negative lifted coords)
+            'chain 0 chr1 100 + 0 10 chrA 50 - 45 55 1\n10\n\n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for idx, content in enumerate(bad_headers):
+                path = os.path.join(tmp_dir, f'bad_hdr_{idx}.chain.gz')
+                with gzip.open(path, 'wt') as h:
+                    h.write(content)
+                with self.assertRaises(ValueError) as ctx:
+                    ChainFile(path)
+                self.assertIn('invalid header coordinates', str(ctx.exception))
 
+    def test_invalid_alignment_signed_overflow(self):
+        ''' check alignment blocks/gaps that exceed chain end or would wrap int64 raise ValueError
+        '''
+        max_i64 = 2**63 - 1
+        bad_chains = [
+            # target + size would wrap signed int64
+            f'chain 0 chr1 {max_i64} + 100 {max_i64} chrA {max_i64} + 100 {max_i64} 1\n{max_i64} 0 0\n\n',
+            # target + size + target_gap would wrap signed int64
+            f'chain 0 chr1 {max_i64} + 0 {max_i64} chrA {max_i64} + 0 {max_i64} 1\n10 {max_i64} 0\n\n',
+            # block exceeds target_end
+            'chain 0 chr1 100 + 0 10 chrA 100 + 0 20 1\n15\n\n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for idx, content in enumerate(bad_chains):
+                path = os.path.join(tmp_dir, f'overflow_{idx}.chain.gz')
+                with gzip.open(path, 'wt') as h:
+                    h.write(content)
+                with self.assertRaises(ValueError):
+                    ChainFile(path)
 
+    def test_one_based_remap_at_int64_max(self):
+        ''' check 1-based lifting at INT64_MAX boundary succeeds without signed overflow
+        '''
+        max_i64 = 2**63 - 1
+        valid_lines = [
+            f'chain 0 chr1 100 + 0 5 chrA {max_i64} + {max_i64 - 5} {max_i64} 1\n',
+            '5\n\n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'max_one_based.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(valid_lines)
+            chain = ChainFile(path, one_based=True)
+            self.assertEqual(chain['chr1'][5], [('chrA', max_i64, '+')])
 
 
