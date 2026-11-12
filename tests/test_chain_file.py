@@ -847,5 +847,16 @@ class TestChainFile(unittest.TestCase):
             with self.assertRaises(ValueError):
                 ChainFile(unicode_dir)
 
+    def test_chain_file_docstrings_and_signature(self):
+        ''' check ChainFile exposes class and __init__ docstrings and signature at runtime
+        '''
+        import inspect
+        self.assertIsNotNone(ChainFile.__doc__)
+        self.assertIn('coordinates', ChainFile.__doc__)
+        self.assertIsNotNone(ChainFile.__init__.__doc__)
+        self.assertIn('one_based', ChainFile.__init__.__doc__)
+        sig = inspect.signature(ChainFile)
+        self.assertEqual(list(sig.parameters), ['path', 'target', 'query', 'one_based'])
+
 
 

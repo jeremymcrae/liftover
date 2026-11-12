@@ -83,6 +83,11 @@ cdef class PyTarget():
         return self.query_fast(_as_coord(pos))
 
 cdef class ChainFile():
+    '''ChainFile(path, target='', query='', one_based=False)
+--
+
+class for converting coordinates between genome builds
+    '''
     cdef dict targets
     cdef dict lookup
     cdef str path
@@ -90,16 +95,6 @@ cdef class ChainFile():
     cdef list query_contigs
 
     def __cinit__(self, path, target: str='', query: str='', one_based: bool=False):
-        ''' 
-        open the chain file for lifting coordinates
-        
-        Args:
-            path: path to chain file
-            target: ID for target genome (deprecated, but don't drop since other 
-                    code might already use this argument).
-            query: ID for query genome (deprecated, but as above)
-            one_based: whether query coordinates are one-based
-        '''
         raw_path = os.fspath(path)
         if not isinstance(raw_path, str):
             raise TypeError(f'expected str or os.PathLike[str] for path, got {type(raw_path).__name__}')
@@ -151,6 +146,18 @@ cdef class ChainFile():
         
         self.missing_target = PyTarget()
         self.missing_target.query_contigs = self.query_contigs
+
+    def __init__(self, path, target: str='', query: str='', one_based: bool=False):
+        ''' open the chain file for lifting coordinates
+
+        Args:
+            path: path to chain file
+            target: ID for target genome (deprecated, but don't drop since other
+                    code might already use this argument).
+            query: ID for query genome (deprecated, but as above)
+            one_based: whether query coordinates are one-based
+        '''
+        pass
 
     def __repr__(self):
         return f'ChainFile("{self.path}")'

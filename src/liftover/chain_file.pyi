@@ -17,13 +17,13 @@ class PyTarget:
 class ChainFile:
     ''' class for converting coordinates between genome builds
     '''
-    def __new__(
-        cls,
+    def __init__(
+        self,
         path: str | os.PathLike[str],
         target: str = '',
         query: str = '',
         one_based: bool = False,
-    ) -> ChainFile:
+    ) -> None:
         '''
         open the chain file for lifting coordinates
 
