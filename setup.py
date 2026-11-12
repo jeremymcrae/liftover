@@ -1,5 +1,3 @@
-
-import glob
 import sys
 
 from setuptools import setup, Extension
@@ -23,11 +21,22 @@ sources = [
     'src/chain_file.cpp',
 ]
 
+ZLIB_DECOMPRESS_SOURCES = [
+    'src/zlib/adler32.c',
+    'src/zlib/crc32.c',
+    'src/zlib/gzlib.c',
+    'src/zlib/gzread.c',
+    'src/zlib/inffast.c',
+    'src/zlib/inflate.c',
+    'src/zlib/inftrees.c',
+    'src/zlib/zutil.c',
+]
+
 libs = ['z']
 include_dirs = ['src/']
 
 if sys.platform == 'win32':
-    sources += glob.glob('src/zlib/*.c')
+    sources += ZLIB_DECOMPRESS_SOURCES
     include_dirs.append('src/zlib/')
     libs = []
 

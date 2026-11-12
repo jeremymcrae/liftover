@@ -37,7 +37,7 @@ public:
   }
   ~GzReader() {
     if (file) {
-      gzclose(file);
+      gzclose_r(file);
     }
   }
   bool is_open() const { return file != nullptr; }
