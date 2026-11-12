@@ -27,27 +27,23 @@ struct Interval {
 };
 
 class Chain {
-  // class to hold all the regions for a single chain
+  // tracks state while parsing alignment lines for a single chain
+  std::vector<Interval> * dest = nullptr;
   std::int64_t target = 0;
   std::int64_t query = 0;
-  std::uint32_t query_id_idx = 0;
-  std::string query_strand;
   std::int64_t query_size = 0;
   std::int64_t target_end = 0;
   std::int64_t query_end = 0;
-  
-  std::int64_t size = 0;
-  std::int64_t target_gap = 0;
-  std::int64_t query_gap = 0;
+  std::uint32_t query_id_idx = 0;
+  bool fwd_strand = true;
 public:
-  std::vector<Interval> intervals;
-  std::string target_id;
-  
   Chain() = default;
-  Chain(std::string & header_line, std::vector<std::string> & query_names, std::unordered_map<std::string, std::uint32_t> & query_indices);
-  void add_line(std::string & line);
-  void validate();
-  void save_to(std::vector<Interval> & dest);
+  Chain(const std::string & header_line,
+        std::unordered_map<std::string, std::vector<Interval>> & chrom_intervals,
+        std::vector<std::string> & query_names,
+        std::unordered_map<std::string, std::uint32_t> & query_indices);
+  void add_line(const std::string & line);
+  void validate() const;
 };
 
 } //namespace

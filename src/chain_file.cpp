@@ -84,7 +84,7 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
   }
 
   std::string line;
-  std::map<std::string, std::vector<Interval>> chrom_intervals;
+  std::unordered_map<std::string, std::vector<Interval>> chrom_intervals;
   std::vector<std::string> query_names;
   std::unordered_map<std::string, std::uint32_t> query_indices;
   Chain chain;
@@ -99,7 +99,7 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
     if (line.empty()) {
       // finish existing chain at blank lines
       if (has_chain) {
-        chain.save_to(chrom_intervals[chain.target_id]);
+        chain.validate();
         has_chain = false;
       }
     } else if (line[0] == '#') {
@@ -107,9 +107,9 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
       continue;
     } else if (line[0] == 'c' && (line.compare(0, 6, "chain ") == 0 || line.compare(0, 6, "chain\t") == 0)) {
       if (has_chain) {
-        chain.save_to(chrom_intervals[chain.target_id]);
+        chain.validate();
       }
-      chain = Chain(line, query_names, query_indices);
+      chain = Chain(line, chrom_intervals, query_names, query_indices);
       has_chain = true;
     } else {
       if (!has_chain) {
@@ -121,10 +121,10 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
 
   if (has_chain) {
     // include the final chain, if the file doesn't end with a blank line
-    chain.save_to(chrom_intervals[chain.target_id]);
+    chain.validate();
   }
   
-  // convert list of intervals into interval trees for each chromosome
+  // index intervals for each chromosome
   std::map<std::string, Target> targets;
   for (auto & x : chrom_intervals) {
     targets.emplace(x.first, Target(std::move(x.second), one_based));

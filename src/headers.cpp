@@ -15,7 +15,7 @@ static std::int64_t parse_header_int(const std::string & s, const std::string & 
   return val;
 }
 
-ChainHeader process_header(std::string & line) {
+ChainHeader process_header(const std::string & line) {
   /* process the header, and performs simple sanity checks
   */
   std::vector<std::string> hdr = split(line);
