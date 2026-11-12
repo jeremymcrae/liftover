@@ -62,7 +62,6 @@ jobs:
       - name: Build
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools build
           pip install .
           python -m unittest discover
 
@@ -106,7 +105,7 @@ jobs:
           CIBW_TEST_COMMAND: "python -m unittest discover -s {project}"
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: ./wheelhouse/*.whl
           name: artifact-${{ matrix.os }}-${{ matrix.python }}
@@ -134,7 +133,7 @@ jobs:
       - name: Build sdist
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools build
+          pip install build
           python -m build --sdist
           pip install dist/*.tar.gz
           python -m unittest discover
