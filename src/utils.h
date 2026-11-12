@@ -1,9 +1,6 @@
 #ifndef LIFTOVER_UTILS_H
 #define LIFTOVER_UTILS_H
 
-#include <vector>
-#include <string>
-#include <sstream>
 #include <cstdint>
 #include <cstdlib>
 #include <cerrno>
@@ -24,7 +21,7 @@ inline bool parse_int64(const char *& ptr, std::int64_t & out, std::int64_t min_
     return false;
   }
   // verify number is terminated by end-of-string or whitespace delimiter
-  if (*end != '\0' && *end != ' ' && *end != '\t') {
+  if (*end != '\0' && *end != ' ' && *end != '\t' && *end != '\r' && *end != '\n') {
     return false;
   }
   // advance pointer past parsed digits and assign output
@@ -32,8 +29,6 @@ inline bool parse_int64(const char *& ptr, std::int64_t & out, std::int64_t min_
   out = val;
   return true;
 }
-
-std::vector<std::string> split(const std::string &s);
 
 } // namespace
 

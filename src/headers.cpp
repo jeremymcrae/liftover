@@ -1,26 +1,62 @@
-
 #include <climits>
+#include <cstring>
 #include <stdexcept>
 
 #include "headers.h"
 
 namespace liftover {
 
-static std::int64_t parse_header_int(const std::string & s, const std::string & line, std::int64_t min_val = 0) {
-  const char * ptr = s.c_str();
+namespace {
+
+struct Token {
+  const char * ptr;
+  std::size_t len;
+};
+
+inline bool is_ws(char c) {
+  return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+inline bool next_token(const char *& cursor, Token & tok) {
+  while (is_ws(*cursor)) {
+    ++cursor;
+  }
+  if (*cursor == '\0') {
+    return false;
+  }
+  tok.ptr = cursor;
+  while (*cursor != '\0' && !is_ws(*cursor)) {
+    ++cursor;
+  }
+  tok.len = static_cast<std::size_t>(cursor - tok.ptr);
+  return true;
+}
+
+inline std::int64_t parse_header_int(const Token & tok, const std::string & line, std::int64_t min_val = 0) {
+  const char * ptr = tok.ptr;
   std::int64_t val = 0;
-  if (!parse_int64(ptr, val, min_val)) {
+  if (!parse_int64(ptr, val, min_val) || ptr != tok.ptr + tok.len) {
     throw std::invalid_argument("invalid header line: " + line);
   }
   return val;
 }
 
-ChainHeader process_header(const std::string & line) {
-  /* process the header, and performs simple sanity checks
-  */
-  std::vector<std::string> hdr = split(line);
+} // namespace
 
-  if (hdr.size() != 13) {
+ChainHeader process_header(const std::string & line) {
+  /* parse a 13-field chain header in-place without intermediate string allocations
+  */
+  Token hdr[13];
+  const char * cursor = line.c_str();
+  for (std::size_t i = 0; i < 13; ++i) {
+    if (!next_token(cursor, hdr[i])) {
+      throw std::invalid_argument("invalid header line: " + line);
+    }
+  }
+  while (is_ws(*cursor)) {
+    ++cursor;
+  }
+  if (*cursor != '\0') {
     throw std::invalid_argument("invalid header line: " + line);
   }
 
@@ -32,21 +68,28 @@ ChainHeader process_header(const std::string & line) {
   std::int64_t query_start = parse_header_int(hdr[10], line);
   std::int64_t query_end = parse_header_int(hdr[11], line);
 
-  ChainHeader header = ChainHeader {hdr[0], score, hdr[2],
-    target_size, hdr[4], target_start, target_end, hdr[7],
-    query_size, hdr[9], query_start, query_end, hdr[12]};
-  
-  if (header.chain != "chain") {
+  if (hdr[0].len != 5 || std::memcmp(hdr[0].ptr, "chain", 5) != 0) {
     throw std::invalid_argument("header line does not start with 'chain': " + line);
   }
-  if (header.target_strand != "+") {
+  if (hdr[4].len != 1 || hdr[4].ptr[0] != '+') {
     throw std::invalid_argument("target strand is not '+': " + line);
   }
-  if (header.query_strand != "+" && header.query_strand != "-") {
+  if (hdr[9].len != 1 || (hdr[9].ptr[0] != '+' && hdr[9].ptr[0] != '-')) {
     throw std::invalid_argument("query strand is not '+' or '-': " + line);
   }
-  
-  return header;
+
+  return ChainHeader {
+    score,
+    std::string(hdr[2].ptr, hdr[2].len),
+    target_size,
+    target_start,
+    target_end,
+    std::string(hdr[7].ptr, hdr[7].len),
+    query_size,
+    query_start,
+    query_end,
+    hdr[9].ptr[0] == '+',
+  };
 }
 
 } // namespace

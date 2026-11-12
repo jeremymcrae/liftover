@@ -54,7 +54,7 @@ Chain::Chain(const std::string & header_line,
     query_id_idx = it->second;
   }
   query = header.query_start;
-  fwd_strand = header.query_strand == "+";
+  fwd_strand = header.fwd_strand;
   query_size = header.query_size;
   target_end = header.target_end;
   query_end = header.query_end;

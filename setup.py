@@ -28,7 +28,6 @@ else:
 sources = [
     'src/liftover/chain_file.pyx',
     'src/chain.cpp',
-    'src/utils.cpp',
     'src/headers.cpp',
     'src/target.cpp',
     'src/chain_file.cpp',

@@ -3,28 +3,23 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
-#include <stdexcept>
 
 #include "utils.h"
 
 namespace liftover {
 
 struct ChainHeader {
-    // hold header data for single chain
-  std::string chain;
+  // hold parsed header data for a single chain
   std::int64_t score;
   std::string target_id;
   std::int64_t target_size;
-  std::string target_strand;
   std::int64_t target_start;
   std::int64_t target_end;
   std::string query_id;
   std::int64_t query_size;
-  std::string query_strand;
   std::int64_t query_start;
   std::int64_t query_end;
-  std::string id;
+  bool fwd_strand;
 };
 
 ChainHeader process_header(const std::string & line);
