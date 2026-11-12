@@ -832,5 +832,20 @@ class TestChainFile(unittest.TestCase):
                 cf2 = get_lifter('~/home.chain.gz')
                 self.assertEqual(cf2['chr1'][5], [('chr1', 5, '+')])
 
+    def test_unicode_chain_file_path(self):
+        ''' check chain files in non-ASCII directory and file names load cleanly
+        '''
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            unicode_dir = os.path.join(tmp_dir, 'пользователи_用户_λ')
+            os.makedirs(unicode_dir)
+            chain_path = os.path.join(unicode_dir, 'tëst_链.chain.gz')
+            with gzip.open(chain_path, 'wt') as h:
+                h.write('chain 0 chr1 10 + 0 10 chr1 10 + 0 10 1\n10\n\n')
+
+            cf = ChainFile(chain_path)
+            self.assertEqual(cf['chr1'][5], [('chr1', 5, '+')])
+            with self.assertRaises(ValueError):
+                ChainFile(unicode_dir)
+
 
 

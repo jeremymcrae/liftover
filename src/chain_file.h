@@ -15,7 +15,8 @@ struct ChainFileResult {
   std::vector<std::string> query_names;
 };
 
-ChainFileResult open_chainfile(std::string path, bool one_based=false);
+ChainFileResult open_chainfile(int & fd, const std::string & path, bool one_based=false);
+ChainFileResult open_chainfile(const std::string & path, bool one_based=false);
 
 }
 

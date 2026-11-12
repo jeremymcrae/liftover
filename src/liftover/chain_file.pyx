@@ -33,7 +33,7 @@ cdef extern from 'chain_file.h' namespace 'liftover':
     map[string, Target] targets
     vector[string] query_names
 
-  ChainFileResult open_chainfile(string, bool) except+
+  ChainFileResult open_chainfile(int &, const string &, bool) except+
 
 cdef inline int64_t _as_coord(object pos) except? -1:
     if PyLong_CheckExact(pos):
@@ -105,12 +105,26 @@ cdef class ChainFile():
             raise TypeError(f'expected str or os.PathLike[str] for path, got {type(raw_path).__name__}')
         self.path = os.path.expanduser(raw_path)
 
+        if os.path.isdir(self.path):
+            raise ValueError(f'cannot open directory as chain file: {self.path}')
+
+        cdef int fd
+        try:
+            fd = os.open(self.path, os.O_RDONLY | getattr(os, 'O_BINARY', 0))
+        except OSError as e:
+            raise ValueError(f'cannot open chain file at {self.path}: {e}') from e
+
         # open the chainfile and move the chromosome mappings to a python
         # dictionary, as accessing this is much faster than converting the
         # c++ Target object each time we query in a chromosome.
         self.targets = {}
         self.lookup = {}
-        cdef ChainFileResult res = open_chainfile(self.path.encode('utf8'), one_based)
+        cdef ChainFileResult res
+        try:
+            res = open_chainfile(fd, self.path.encode('utf8'), one_based)
+        finally:
+            if fd >= 0:
+                os.close(fd)
         
         # Pre-decode unique query chromosome names into Python str objects once
         self.query_contigs = [name.decode('utf8') for name in res.query_names]

@@ -1,6 +1,5 @@
 #include <cstring>
 #include <stdexcept>
-#include <sys/stat.h>
 #include <unordered_map>
 #include <vector>
 #include <zlib.h>
@@ -9,20 +8,6 @@
 
 namespace liftover {
 
-static bool is_directory(const char *path) {
-  struct stat st;
-  if (stat(path, &st) == 0) {
-#if defined(S_ISDIR)
-    return S_ISDIR(st.st_mode);
-#elif defined(_S_IFDIR)
-    return (st.st_mode & _S_IFDIR) != 0;
-#else
-    return false;
-#endif
-  }
-  return false;
-}
-
 class GzReader {
   gzFile file;
   std::string path;
@@ -30,11 +15,19 @@ class GzReader {
   int buf_len = 0;
   int buf_pos = 0;
 public:
-  explicit GzReader(const char *path) : file(gzopen(path, "rb")), path(path) {
+  GzReader(int & fd, const std::string & path) : file(gzdopen(fd, "rb")), path(path) {
+    if (file) {
+      fd = -1;
+      gzbuffer(file, 65536);
+    }
+  }
+  explicit GzReader(const std::string & path) : file(gzopen(path.c_str(), "rb")), path(path) {
     if (file) {
       gzbuffer(file, 65536);
     }
   }
+  GzReader(const GzReader &) = delete;
+  GzReader & operator=(const GzReader &) = delete;
   ~GzReader() {
     if (file) {
       gzclose_r(file);
@@ -42,7 +35,7 @@ public:
   }
   bool is_open() const { return file != nullptr; }
 
-  bool getline(std::string &line) {
+  bool getline(std::string & line) {
     line.clear();
     while (true) {
       if (buf_pos >= buf_len) {
@@ -50,16 +43,16 @@ public:
         buf_pos = 0;
         if (buf_len <= 0) {
           int errnum = 0;
-          const char *msg = gzerror(file, &errnum);
+          const char * msg = gzerror(file, &errnum);
           if (buf_len < 0 || (errnum != Z_OK && errnum != Z_STREAM_END)) {
             throw std::invalid_argument(msg && *msg ? msg : "error reading chain file: " + path);
           }
           return !line.empty();
         }
       }
-      char *newline = static_cast<char *>(std::memchr(buffer + buf_pos, '\n', buf_len - buf_pos));
+      char * newline = static_cast<char *>(std::memchr(buffer + buf_pos, '\n', buf_len - buf_pos));
       if (newline != nullptr) {
-        int len = newline - (buffer + buf_pos);
+        int len = static_cast<int>(newline - (buffer + buf_pos));
         line.append(buffer + buf_pos, len);
         buf_pos += len + 1;
         return true;
@@ -72,17 +65,9 @@ public:
   }
 };
 
-ChainFileResult open_chainfile(std::string path, bool one_based) {
-  /* open a gzipped liftover chain file, and parses contents
-  
-  This builds a map of Targets, indexed by chromosome, so we can quickly select
-  the Target of interest when querying a given coordinate.
+static ChainFileResult parse_chainfile(GzReader & infile, const std::string & path, bool one_based) {
+  /* parse a liftover chain stream into per-chromosome Target interval indexes
   */
-  if (is_directory(path.c_str())) {
-    throw std::invalid_argument("cannot open directory as chain file: " + path);
-  }
-
-  GzReader infile(path.c_str());
   if (!infile.is_open()) {
     throw std::invalid_argument("cannot open chain file at " + path);
   }
@@ -133,13 +118,23 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
     // include the final chain, if the file doesn't end with a blank line
     chain.validate();
   }
-  
+
   // index intervals for each chromosome
   std::map<std::string, Target> targets;
   for (auto & x : chrom_intervals) {
     targets.emplace(x.first, Target(std::move(x.second), one_based));
   }
   return ChainFileResult {std::move(targets), std::move(query_names)};
+}
+
+ChainFileResult open_chainfile(int & fd, const std::string & path, bool one_based) {
+  GzReader infile(fd, path);
+  return parse_chainfile(infile, path, one_based);
+}
+
+ChainFileResult open_chainfile(const std::string & path, bool one_based) {
+  GzReader infile(path);
+  return parse_chainfile(infile, path, one_based);
 }
 
 } //namespace
