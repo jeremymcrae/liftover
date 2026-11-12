@@ -540,4 +540,26 @@ class TestChainFile(unittest.TestCase):
             chain = ChainFile(path, one_based=True)
             self.assertEqual(chain['chr1'][5], [('chrA', max_i64, '+')])
 
+    def test_chain_file_whitespace_only_lines_and_indented_comments(self):
+        ''' check whitespace-only separator lines and indented comments parse cleanly
+        '''
+        lines = [
+            '   \t\r\n',
+            '  # indented comment\n',
+            'chain 0 chr1 10 + 0 10 chrA 30 + 10 20 1\r\n',
+            '5 0 0\r\n',
+            '5\r\n',
+            '   \t  \r\n',
+            'chain 0 chr2 10 + 0 10 chrB 30 + 20 30 2\n',
+            '10\n',
+            '   \n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'ws.chain.gz')
+            with gzip.open(path, 'wt', newline='') as h:
+                h.writelines(lines)
+            chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][6], [('chrA', 16, '+')])
+            self.assertEqual(chain['chr2'][6], [('chrB', 26, '+')])
+
 

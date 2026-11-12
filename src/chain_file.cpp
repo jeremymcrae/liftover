@@ -95,21 +95,27 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
   bool has_chain = false;
 
   while (infile.getline(line)) {
-    // sanitize line endings
-    if (!line.empty() && line.back() == '\r') {
+    while (!line.empty() && line.back() == '\r') {
       line.pop_back();
     }
-    
-    if (line.empty()) {
-      // finish existing chain at blank lines
+    std::size_t first = 0;
+    while (first < line.size() && (line[first] == ' ' || line[first] == '\t')) {
+      ++first;
+    }
+
+    if (first == line.size()) {
+      // finish existing chain at blank or whitespace-only lines
       if (has_chain) {
         chain.validate();
         has_chain = false;
       }
-    } else if (line[0] == '#') {
+    } else if (line[first] == '#') {
       // skip comment lines
       continue;
-    } else if (line[0] == 'c' && (line.compare(0, 6, "chain ") == 0 || line.compare(0, 6, "chain\t") == 0)) {
+    } else if (line[first] == 'c' &&
+               line.size() - first >= 6 &&
+               std::memcmp(line.data() + first, "chain", 5) == 0 &&
+               (line[first + 5] == ' ' || line[first + 5] == '\t')) {
       if (has_chain) {
         chain.validate();
       }
