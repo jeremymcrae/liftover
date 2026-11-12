@@ -91,7 +91,10 @@ cdef class ChainFile():
             query: ID for query genome (deprecated, but as above)
             one_based: whether query coordinates are one-based
         '''
-        self.path = str(path)
+        raw_path = os.fspath(path)
+        if not isinstance(raw_path, str):
+            raise TypeError(f'expected str or os.PathLike[str] for path, got {type(raw_path).__name__}')
+        self.path = os.path.expanduser(raw_path)
 
         # open the chainfile and move the chromosome mappings to a python
         # dictionary, as accessing this is much faster than converting the

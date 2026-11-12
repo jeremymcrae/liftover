@@ -588,10 +588,12 @@ class TestChainFile(unittest.TestCase):
             with gzip.open(legacy_file, 'wt') as h:
                 h.writelines(lines)
 
+            real_expanduser = os.path.expanduser
+
             def fake_expanduser(path):
                 if path == '~/.liftover':
                     return legacy_dir
-                return os.path.expanduser(path)
+                return real_expanduser(path)
 
             download_mock = unittest.mock.MagicMock()
 
@@ -625,10 +627,12 @@ class TestChainFile(unittest.TestCase):
                 with gzip.open(dest, 'wt') as h:
                     h.writelines(lines)
 
+            real_expanduser = os.path.expanduser
+
             def fake_expanduser(path):
                 if path == '~/.liftover':
                     return empty_legacy_dir
-                return os.path.expanduser(path)
+                return real_expanduser(path)
 
             with patch('liftover.lifter.default_cache_dir', return_value=new_cache), \
                  patch('os.path.expanduser', side_effect=fake_expanduser), \
@@ -776,6 +780,40 @@ class TestChainFile(unittest.TestCase):
                 download_file('https://example.com/f.gz', dest)
                 mock_resp.stream.assert_called_once_with(65536, decode_content=False)
                 self.assertTrue(os.path.exists(dest))
+
+    def test_path_validation_and_tilde_expansion(self):
+        ''' check os.fspath validation, ~ expansion, and build name path-traversal rejection
+        '''
+        from unittest.mock import patch
+
+        for bad_path in (123, None, b'bytes.chain.gz'):
+            with self.assertRaises(TypeError):
+                ChainFile(bad_path)
+            with self.assertRaises(TypeError):
+                get_lifter(bad_path)
+
+        for bad_build in ('../hg19', 'hg19/extra', 'hg19\\extra', '..'):
+            with self.assertRaises(ValueError):
+                get_lifter(bad_build, 'hg38')
+            with self.assertRaises(ValueError):
+                get_lifter('hg19', bad_build)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            chain_file = os.path.join(tmp_dir, 'home.chain.gz')
+            with gzip.open(chain_file, 'wt') as h:
+                h.write('chain 0 chr1 10 + 0 10 chr1 10 + 0 10 1\n10\n\n')
+
+            real_expanduser = os.path.expanduser
+            def fake_expanduser(p):
+                if isinstance(p, str) and p.startswith('~/'):
+                    return os.path.join(tmp_dir, p[2:])
+                return real_expanduser(p)
+
+            with patch('os.path.expanduser', side_effect=fake_expanduser):
+                cf1 = ChainFile('~/home.chain.gz')
+                self.assertEqual(cf1['chr1'][5], [('chr1', 5, '+')])
+                cf2 = get_lifter('~/home.chain.gz')
+                self.assertEqual(cf2['chr1'][5], [('chr1', 5, '+')])
 
 
 

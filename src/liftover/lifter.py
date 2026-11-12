@@ -46,15 +46,23 @@ def get_lifter(target: str | os.PathLike[str],
 
     if query is None:
         # if no query is provided, assume the target is a chain file
-        chain_path = os.fspath(target)
+        raw_path = os.fspath(target)
+        if not isinstance(raw_path, str):
+            raise TypeError(f'expected str or os.PathLike[str] for target, got {type(raw_path).__name__}')
+        chain_path = os.path.expanduser(raw_path)
         if not chain_path.endswith(('.chain.gz', '.chain')) or os.path.isdir(chain_path):
             raise ValueError('target must be a chain file if no query is provided')
     else:
         # otherwise, construct the chain file path
-        target = str(target).strip()
+        if not isinstance(target, str) or not isinstance(query, str):
+            raise TypeError('target and query genome builds must be strings')
+        target = target.strip()
         query = query.strip()
         if not target or not query:
             raise ValueError('target and query genome builds must not be empty')
+        for build in (target, query):
+            if '/' in build or '\\' in build or '..' in build:
+                raise ValueError(f'invalid genome build name: {build!r}')
 
         using_default_cache = False
         if cache is None:
@@ -64,7 +72,10 @@ def get_lifter(target: str | os.PathLike[str],
             using_default_cache = True
             cache = default_cache_dir()
         else:
-            cache = os.path.expanduser(os.fspath(cache))
+            raw_cache = os.fspath(cache)
+            if not isinstance(raw_cache, str):
+                raise TypeError(f'expected str or os.PathLike[str] for cache, got {type(raw_cache).__name__}')
+            cache = os.path.expanduser(raw_cache)
 
         query = query[0].upper() + query[1:]
         target = target[0].lower() + target[1:]
