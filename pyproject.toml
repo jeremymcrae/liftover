@@ -25,6 +25,7 @@ classifiers = [
 
 [tool.setuptools]
 include-package-data = false
+package-dir = {'' = 'src'}
 packages = [
     'liftover',
 ]

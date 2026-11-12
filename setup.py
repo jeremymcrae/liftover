@@ -51,6 +51,6 @@ ext = [
               language='c++'),
     ]
 
-setup(package_dir={'': 'src'},
-      ext_modules=cythonize(ext),
-      )
+setup(
+    ext_modules=cythonize(ext),
+)
