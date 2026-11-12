@@ -239,19 +239,25 @@ class TestChainFile(unittest.TestCase):
     def test_invalid_chain_file_header_overflow(self):
         ''' check header number exceeding 64-bit integer raises ValueError
         '''
-        large = 2**64
-        lines = [f'chain 0 chr1 {large} + 0 10 chr1 {large} + 0 10 2\n',
-                 '10\n',
-                 '\n']
-
         with tempfile.TemporaryDirectory() as tmp_dir:
-            path = os.path.join(tmp_dir, 'test.chain.gz')
-            with gzip.open(path, 'wt') as handle:
-                handle.writelines(lines)
+            for bad_score in [2**63, -2**63 - 1, 2**64]:
+                path = os.path.join(tmp_dir, 'bad.chain.gz')
+                lines = [f'chain {bad_score} chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                         '10\n\n']
+                with gzip.open(path, 'wt') as handle:
+                    handle.writelines(lines)
+                with self.assertRaises(ValueError) as context:
+                    ChainFile(path)
+                self.assertIn('invalid header line', str(context.exception))
 
-            with self.assertRaises(ValueError) as context:
-                ChainFile(path)
-            self.assertTrue('invalid header line' in context.exception.args[0])
+            for ok_score in [2**63 - 1, -2**63]:
+                path = os.path.join(tmp_dir, 'ok.chain.gz')
+                lines = [f'chain {ok_score} chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                         '10\n\n']
+                with gzip.open(path, 'wt') as handle:
+                    handle.writelines(lines)
+                chain = ChainFile(path)
+                self.assertEqual(chain['chr1'][5], [('chr1', 5, '+')])
 
     def test_invalid_chain_file_header_text_in_number(self):
         ''' check header with letters in numeric field raises ValueError

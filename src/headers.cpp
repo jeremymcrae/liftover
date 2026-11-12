@@ -1,5 +1,5 @@
-#include <climits>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 
 #include "headers.h"
@@ -60,7 +60,7 @@ ChainHeader process_header(const std::string & line) {
     throw std::invalid_argument("invalid header line: " + line);
   }
 
-  std::int64_t score = parse_header_int(hdr[1], line, LLONG_MIN);
+  std::int64_t score = parse_header_int(hdr[1], line, std::numeric_limits<std::int64_t>::min());
   std::int64_t target_size = parse_header_int(hdr[3], line);
   std::int64_t target_start = parse_header_int(hdr[5], line);
   std::int64_t target_end = parse_header_int(hdr[6], line);
