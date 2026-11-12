@@ -174,10 +174,20 @@ class for converting coordinates between genome builds
         '''
         return self._query_chrom(chrom, pos)
 
-    def convert_coordinate(self, str chrom, pos):
+    def convert_coordinate(self, str chrom, pos, str strand not None='+'):
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''
-        return self._query_chrom(chrom, pos)
+        if strand == '+':
+            return self._query_chrom(chrom, pos)
+        if strand != '-':
+            raise ValueError("strand must be '+' or '-'")
+        cdef list matches = self._query_chrom(chrom, pos)
+        cdef Py_ssize_t i
+        cdef tuple m
+        for i in range(len(matches)):
+            m = <tuple>matches[i]
+            matches[i] = (m[0], m[1], STRAND_MINUS if m[2] == '+' else STRAND_PLUS)
+        return matches
 
     def __contains__(self, contig):
         ''' check whether a contig is present in the chain file

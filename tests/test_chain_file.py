@@ -858,5 +858,31 @@ class TestChainFile(unittest.TestCase):
         sig = inspect.signature(ChainFile)
         self.assertEqual(list(sig.parameters), ['path', 'target', 'query', 'one_based'])
 
+    def test_convert_coordinate_strand(self):
+        ''' check convert_coordinate supports pyliftover's optional strand argument
+        '''
+        lines = [
+            'chain 0 chr1 100 + 0 10 chrFwd 100 + 10 20 1\n10\n\n',
+            'chain 0 chr2 100 + 0 10 chrRev 100 - 10 20 2\n10\n\n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'strand.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(lines)
+            cf = ChainFile(path)
+
+            self.assertEqual(cf.convert_coordinate('chr1', 5), [('chrFwd', 15, '+')])
+            self.assertEqual(cf.convert_coordinate('chr1', 5, '+'), [('chrFwd', 15, '+')])
+            self.assertEqual(cf.convert_coordinate('chr1', 5, '-'), [('chrFwd', 15, '-')])
+
+            self.assertEqual(cf.convert_coordinate('chr2', 5), [('chrRev', 84, '-')])
+            self.assertEqual(cf.convert_coordinate('chr2', 5, '+'), [('chrRev', 84, '-')])
+            self.assertEqual(cf.convert_coordinate('chr2', 5, '-'), [('chrRev', 84, '+')])
+
+            with self.assertRaises(ValueError):
+                cf.convert_coordinate('chr1', 5, '?')
+            with self.assertRaises(TypeError):
+                cf.convert_coordinate('chr1', 5, None)
+
 
 
