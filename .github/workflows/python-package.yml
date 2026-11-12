@@ -136,7 +136,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools build
           python -m build --sdist
-          pip install .
+          pip install dist/*.tar.gz
           python -m unittest discover
 
       - uses: actions/upload-artifact@v7
