@@ -1,6 +1,5 @@
 
 import glob
-import os
 import sys
 
 from setuptools import setup, Extension
@@ -9,21 +8,12 @@ from Cython.Build import cythonize
 EXTRA_COMPILE_ARGS = []
 EXTRA_LINK_ARGS = []
 if sys.platform == "win32":
-    EXTRA_COMPILE_ARGS += ['/std:c++14']
+    EXTRA_COMPILE_ARGS += ['/std:c++14', '/O2']
 else:
-    EXTRA_COMPILE_ARGS += ['-std=c++11']
+    EXTRA_COMPILE_ARGS += ['-std=c++11', '-O2']
     if sys.platform == "darwin":
         EXTRA_COMPILE_ARGS += ["-stdlib=libc++"]
         EXTRA_LINK_ARGS += ["-stdlib=libc++"]
-        sdk_base = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        if os.path.exists(sdk_base):
-            EXTRA_COMPILE_ARGS += [
-                f"-I{sdk_base}/usr/include/c++/v1",
-                f"-I{sdk_base}/usr/include",
-            ]
-            EXTRA_LINK_ARGS += [
-                f"-L{sdk_base}/usr/lib",
-            ]
 
 sources = [
     'src/liftover/chain_file.pyx',
