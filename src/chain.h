@@ -7,7 +7,6 @@
 #include <unordered_map>
 
 #include "headers.h"
-#include "intervaltree/IntervalTree.h"
 
 namespace liftover {
 
@@ -20,7 +19,12 @@ struct Mapped {
   bool fwd_strand;
 };
 
-typedef IntervalTree<std::int64_t, Mapped> Tree;
+struct Interval {
+  // half-open target interval [start, stop)
+  std::int64_t start;
+  std::int64_t stop;
+  Mapped value;
+};
 
 class Chain {
   // class to hold all the regions for a single chain
@@ -36,14 +40,14 @@ class Chain {
   std::int64_t target_gap = 0;
   std::int64_t query_gap = 0;
 public:
-  Tree::interval_vector intervals;
+  std::vector<Interval> intervals;
   std::string target_id;
   
   Chain() = default;
   Chain(std::string & header_line, std::vector<std::string> & query_names, std::unordered_map<std::string, std::uint32_t> & query_indices);
   void add_line(std::string & line);
   void validate();
-  void save_to(Tree::interval_vector & dest);
+  void save_to(std::vector<Interval> & dest);
 };
 
 } //namespace

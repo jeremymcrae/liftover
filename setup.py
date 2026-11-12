@@ -35,7 +35,7 @@ sources = [
 ]
 
 libs = ['z']
-include_dirs = ['src/', 'src/intervaltree/']
+include_dirs = ['src/']
 
 if sys.platform == 'win32':
     sources += glob.glob('src/zlib/*.c')

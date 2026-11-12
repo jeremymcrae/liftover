@@ -674,5 +674,42 @@ class TestChainFile(unittest.TestCase):
             self.assertEqual(len(matches_15), 7)
             self.assertIn(('chrExtra', 1000 - 55 - 1, '-'), matches_15)
 
+    def test_nested_and_unsorted_overlapping_chains(self):
+        ''' check nested and out-of-order overlapping chains query accurately at all boundaries
+        '''
+        lines = [
+            'chain 0 chr1 2000 + 300 400 chrInner2 2000 + 3000 3100 1\n',
+            '100\n\n',
+            'chain 0 chr1 2000 + 10 1000 chrOuter 2000 + 1000 1990 2\n',
+            '990\n\n',
+            'chain 0 chr1 2000 + 100 200 chrInner1 2000 + 2000 2100 3\n',
+            '100\n\n',
+            'chain 0 chr1 2000 + 500 600 chrInner3 2000 + 4000 4100 4\n',
+            '100\n\n',
+        ]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'nested.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(lines)
+
+            chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][-1], [])
+            self.assertEqual(chain['chr1'][-2**63], [])
+            self.assertEqual(chain['chr1'][9], [])
+            self.assertEqual(chain['chr1'][10], [('chrOuter', 1000, '+')])
+            self.assertEqual(chain['chr1'][99], [('chrOuter', 1089, '+')])
+            self.assertEqual(
+                sorted(chain['chr1'][100]),
+                [('chrInner1', 2000, '+'), ('chrOuter', 1090, '+')],
+            )
+            self.assertEqual(
+                sorted(chain['chr1'][199]),
+                [('chrInner1', 2099, '+'), ('chrOuter', 1189, '+')],
+            )
+            self.assertEqual(chain['chr1'][200], [('chrOuter', 1190, '+')])
+            self.assertEqual(chain['chr1'][950], [('chrOuter', 1940, '+')])
+            self.assertEqual(chain['chr1'][999], [('chrOuter', 1989, '+')])
+            self.assertEqual(chain['chr1'][1000], [])
+
 
 

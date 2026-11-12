@@ -84,7 +84,7 @@ ChainFileResult open_chainfile(std::string path, bool one_based) {
   }
 
   std::string line;
-  std::map<std::string, Tree::interval_vector> chrom_intervals;
+  std::map<std::string, std::vector<Interval>> chrom_intervals;
   std::vector<std::string> query_names;
   std::unordered_map<std::string, std::uint32_t> query_indices;
   Chain chain;

@@ -68,7 +68,7 @@ void Chain::add_line(std::string & line) {
   bool fwd = query_strand == "+";
   std::int64_t mapped_start = fwd ? query : query_size - 1 - query;
   Mapped data = Mapped {mapped_start, query_id_idx, fwd};
-  intervals.push_back( Tree::interval(target, target + size, data) );
+  intervals.push_back(Interval {target, target + size, data});
   
   target += size + target_gap;
   query += size + query_gap;
@@ -86,7 +86,7 @@ void Chain::validate() {
 }
 
 // validate and move intervals to destination chromosome vector
-void Chain::save_to(Tree::interval_vector & dest) {
+void Chain::save_to(std::vector<Interval> & dest) {
   validate();
   if (dest.empty()) {
     dest = std::move(intervals);

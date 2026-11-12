@@ -1,6 +1,3 @@
-[submodule "intervaltree"]
-	path = src/intervaltree
-	url = https://github.com/ekg/intervaltree
 [submodule "src/zlib"]
 	path = src/zlib
 	url = https://github.com/madler/zlib.git

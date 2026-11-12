@@ -2,16 +2,12 @@
 #define LIFTOVER_TARGET_H
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
-#include "headers.h"
 #include "chain.h"
 
-#include "intervaltree/IntervalTree.h"
-
 namespace liftover {
-
-typedef IntervalTree<std::int64_t, Mapped> Tree;
 
 struct Match {
   // hold info for a matched site after a successful query
@@ -52,26 +48,31 @@ struct MatchBuffer {
 };
 
 class Target {
-  /* converts the vector of chains for a single chromosome for quick queries
-  
-  Objects of this type are stored inside a map, indexed by chromosome, so this
-  just has to handle nucleotide position queries. Ideally the interface should
-  work like: map[chrom][pos]
-  
-  Currently stores the regions in an interval tree for fast queries.
+  /* indexes the intervals for a single chromosome for fast point queries.
+
+  Intervals are stored in a flat vector sorted by start coordinate. When no
+  intervals on the chromosome overlap (true for all UCSC over.chain contigs),
+  queries run a single std::upper_bound binary search. When intervals overlap,
+  max_stops augments the array as an implicit midpoint interval tree.
   */
+  std::vector<Interval> intervals;
+  std::vector<std::int64_t> max_stops;
   bool one_based = false;
-  Tree tree;
+
+  std::int64_t build_max_stops(std::size_t low, std::size_t high);
+  void query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, MatchBuffer & matches) const;
+  Match remap(const Interval & region, std::int64_t pos) const;
 public:
-  Target(Tree::interval_vector ivals, bool _one_based = false);
+  Target(std::vector<Interval> ivals, bool _one_based = false);
   Target() = default;
   Target(Target&&) = default;
   Target& operator=(Target&&) = default;
   Target(const Target&) = default;
   Target& operator=(const Target&) = default;
   void swap(Target & other) noexcept {
+    intervals.swap(other.intervals);
+    max_stops.swap(other.max_stops);
     std::swap(one_based, other.one_based);
-    std::swap(tree, other.tree);
   }
   void query(std::int64_t pos, MatchBuffer & matches) const;
   std::vector<Match> query(std::int64_t pos) const;
