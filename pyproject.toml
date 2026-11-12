@@ -15,7 +15,6 @@ authors = [
 
 dependencies = [
     'urllib3',
-    'platformdirs',
 ]
 
 classifiers = [

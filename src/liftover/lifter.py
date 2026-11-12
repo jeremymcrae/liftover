@@ -4,17 +4,16 @@ from __future__ import annotations
 import os
 import sys
 
-import platformdirs
-
 from liftover.chain_file import ChainFile
 from liftover.download_file import download_file
 
 def default_cache_dir() -> str:
     ''' get the standard user cache directory for liftover (XDG on Unix/macOS) '''
     if sys.platform == 'win32':
-        return os.path.normpath(platformdirs.user_cache_dir('liftover', appauthor=False, opinion=False))
-    from platformdirs.unix import Unix
-    return os.path.normpath(Unix('liftover').user_cache_dir)
+        base = os.environ.get('LOCALAPPDATA', '').strip() or os.path.join(os.path.expanduser('~'), 'AppData', 'Local')
+    else:
+        base = os.environ.get('XDG_CACHE_HOME', '').strip() or os.path.expanduser('~/.cache')
+    return os.path.normpath(os.path.join(base, 'liftover'))
 
 def get_lifter(target: str | os.PathLike[str],
                query: str | None=None,

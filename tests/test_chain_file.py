@@ -584,6 +584,13 @@ class TestChainFile(unittest.TestCase):
                     xdg_cache = default_cache_dir()
                     self.assertEqual(os.path.normpath(xdg_cache), os.path.normpath(os.path.join(tmp_dir, 'liftover')))
 
+        # test Windows LOCALAPPDATA resolution
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with patch.object(sys, 'platform', 'win32'), \
+                 patch.dict(os.environ, {'LOCALAPPDATA': tmp_dir}):
+                win_cache = default_cache_dir()
+                self.assertEqual(os.path.normpath(win_cache), os.path.normpath(os.path.join(tmp_dir, 'liftover')))
+
     def test_get_lifter_legacy_cache_fallback(self):
         ''' check get_lifter falls back to ~/.liftover when present
         '''
