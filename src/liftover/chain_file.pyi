@@ -6,8 +6,8 @@ from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 class PyTarget:
     ''' class to hold cpp object for nucleotide position queries
     '''
-    def __init__(self) -> None: ...
-    def __getitem__(self, pos: int) -> list[tuple[str, int, str]]:
+    def __new__(cls) -> PyTarget: ...
+    def __getitem__(self, pos: int, /) -> list[tuple[str, int, str]]:
         ''' find the coordinate matches for a position on this contig
 
         each match is a (contig, position, strand) tuple, where strand is '+' or '-'
@@ -17,13 +17,13 @@ class PyTarget:
 class ChainFile:
     ''' class for converting coordinates between genome builds
     '''
-    def __init__(
-        self,
+    def __new__(
+        cls,
         path: str | os.PathLike[str],
-        target: str = ...,
-        query: str = ...,
-        one_based: bool = ...,
-    ) -> None:
+        target: str = '',
+        query: str = '',
+        one_based: bool = False,
+    ) -> ChainFile:
         '''
         open the chain file for lifting coordinates
 
@@ -36,7 +36,7 @@ class ChainFile:
         '''
         ...
     def __repr__(self) -> str: ...
-    def __getitem__(self, contig: str) -> PyTarget:
+    def __getitem__(self, contig: str, /) -> PyTarget:
         ''' get the Target object for a target chromosome
         '''
         ...
@@ -60,6 +60,6 @@ class ChainFile:
         ''' get (contig, Target) pairs
         '''
         ...
-    def __contains__(self, contig: object) -> bool: ...
+    def __contains__(self, contig: object, /) -> bool: ...
     def __iter__(self) -> Iterator[str]: ...
     def __len__(self) -> int: ...

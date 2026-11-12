@@ -66,6 +66,16 @@ jobs:
           pip install .
           python -m unittest discover
 
+      - name: test mypy signatures
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14'
+        run: |
+          pip install mypy
+          mypy src/liftover
+          python -m mypy.stubtest \
+            --ignore-missing-stub \
+            --ignore-disjoint-bases \
+            liftover.chain_file
+
   build_wheels:
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     needs: fetch_chain

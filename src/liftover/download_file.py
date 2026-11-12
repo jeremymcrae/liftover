@@ -4,10 +4,12 @@ from __future__ import annotations
 import gzip
 import os
 import tempfile
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import urllib3
-from urllib3.response import HTTPResponse
+
+if TYPE_CHECKING:
+    from urllib3.response import BaseHTTPResponse
 
 
 def verify_file(
@@ -36,7 +38,7 @@ def verify_file(
         except Exception as e:
             raise ValueError(f'downloaded file from {url} is not a valid gzip file: {e}') from e
 
-def _stream_to_file(response: HTTPResponse, dest_path: str, url: str) -> None:
+def _stream_to_file(response: BaseHTTPResponse, dest_path: str, url: str) -> None:
     ''' stream response body to a temporary file, verify integrity, and atomically rename '''
     dirpath = os.path.dirname(os.path.abspath(dest_path))
     fd, tmp_path = tempfile.mkstemp(dir=dirpath)
