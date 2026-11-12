@@ -1,12 +1,11 @@
 # liftover code
-include MANIFEST.in
-include pyproject.toml
-include src/liftover/*.cpp
 include src/liftover/*.py
-include src/liftover/*.pyx
 include src/liftover/*.pyi
+include src/liftover/*.pyx
 include src/liftover/py.typed
+# cython generates these while building, so a copy here could be stale
+exclude src/liftover/*.cpp
 include src/*.h
-include src/*.cpp
+include src/chain.cpp src/chain_file.cpp src/headers.cpp src/target.cpp
 include src/zlib/*.h
 include src/zlib/*.c
