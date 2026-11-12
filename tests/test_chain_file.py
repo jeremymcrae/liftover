@@ -563,7 +563,7 @@ class TestChainFile(unittest.TestCase):
         ''' check module __version__ is defined and __name__ is not overwritten
         '''
         import liftover
-        self.assertEqual(lifter_module_name := liftover.__name__, 'liftover')
+        self.assertEqual(liftover.__name__, 'liftover')
         self.assertIsInstance(liftover.__version__, str)
         self.assertTrue(len(liftover.__version__) > 0)
         self.assertIn('__version__', liftover.__all__)
@@ -595,7 +595,6 @@ class TestChainFile(unittest.TestCase):
         ''' check get_lifter falls back to ~/.liftover when present
         '''
         from unittest.mock import patch
-        from liftover import default_cache_dir
 
         lines = [
             'chain 0 chr1 100 + 0 10 chrA 100 + 10 30 1\n',

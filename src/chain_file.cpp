@@ -50,15 +50,15 @@ public:
           return !line.empty();
         }
       }
-      char * newline = static_cast<char *>(std::memchr(buffer + buf_pos, '\n', buf_len - buf_pos));
+      std::size_t rem = static_cast<std::size_t>(buf_len - buf_pos);
+      char * newline = static_cast<char *>(std::memchr(buffer + buf_pos, '\n', rem));
       if (newline != nullptr) {
-        int len = static_cast<int>(newline - (buffer + buf_pos));
+        std::size_t len = static_cast<std::size_t>(newline - (buffer + buf_pos));
         line.append(buffer + buf_pos, len);
-        buf_pos += len + 1;
+        buf_pos += static_cast<int>(len) + 1;
         return true;
       } else {
-        int len = buf_len - buf_pos;
-        line.append(buffer + buf_pos, len);
+        line.append(buffer + buf_pos, rem);
         buf_pos = buf_len;
       }
     }

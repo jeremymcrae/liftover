@@ -1,13 +1,12 @@
 
 import gzip
 import os
-import unittest
-from pathlib import Path
 import tempfile
+import unittest
 
 from liftover import ChainFile
 
-class TestChainFile(unittest.TestCase):
+class TestInvalidChainFile(unittest.TestCase):
     ''' check for failures when parsing invalid chain files
     '''
     
@@ -196,6 +195,7 @@ class TestChainFile(unittest.TestCase):
                 handle.writelines(lines)
 
             chain = ChainFile(path)
+            self.assertEqual(chain['chr1'][6][0][1], 21)
 
     def test_invalid_chain_file_text_in_number(self):
         ''' check chain file lines with text in a number field fail

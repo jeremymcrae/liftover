@@ -78,7 +78,7 @@ def get_lifter(target: str | os.PathLike[str],
 
         query = query[0].upper() + query[1:]
         target = target[0].lower() + target[1:]
-        basename = '{}To{}.over.chain.gz'.format(target, query)
+        basename = f'{target}To{query}.over.chain.gz'
         chain_path = os.path.join(cache, basename)
 
         # Check legacy ~/.liftover cache as fallback if using default cache location
