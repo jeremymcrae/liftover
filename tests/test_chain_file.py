@@ -107,6 +107,23 @@ class TestChainFile(unittest.TestCase):
             # can't use string for position
             self.lifter['chr1']['f']
 
+        for bad_pos in (100.9, True, False, None):
+            with self.assertRaises(TypeError):
+                self.lifter['chr1'][bad_pos]
+            with self.assertRaises(TypeError):
+                self.lifter.query('chr1', bad_pos)
+            with self.assertRaises(TypeError):
+                self.lifter.convert_coordinate('chr1', bad_pos)
+            with self.assertRaises(TypeError):
+                self.lifter.query('chr_missing', bad_pos)
+
+        class IntLike:
+            def __index__(self):
+                return 103786442
+
+        self.assertEqual(self.lifter['chr1'][IntLike()], self.lifter['chr1'][103786442])
+        self.assertEqual(self.lifter.query('chr1', IntLike()), self.lifter.query('chr1', 103786442))
+
     def test_mixed_prefix(self):
         ''' check contig lookup works when chain file has mixed prefixes
         '''

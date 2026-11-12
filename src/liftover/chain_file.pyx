@@ -2,6 +2,9 @@
 
 import os
 
+from cpython.bool cimport PyBool_Check
+from cpython.long cimport PyLong_AsLongLong, PyLong_CheckExact
+from cpython.number cimport PyNumber_Index
 from cython.operator cimport dereference as deref, preincrement as inc
 from libc.stdint cimport int64_t, uint32_t
 from libcpp.string cimport string
@@ -31,6 +34,13 @@ cdef extern from 'chain_file.h' namespace 'liftover':
     vector[string] query_names
 
   ChainFileResult open_chainfile(string, bool) except+
+
+cdef inline int64_t _as_coord(object pos) except? -1:
+    if PyLong_CheckExact(pos):
+        return PyLong_AsLongLong(pos)
+    if PyBool_Check(pos):
+        raise TypeError('position must be an integer, not bool')
+    return PyLong_AsLongLong(PyNumber_Index(pos))
 
 cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
@@ -70,8 +80,7 @@ cdef class PyTarget():
         return matches
 
     def __getitem__(self, pos):
-        cdef int64_t c_pos = pos
-        return self.query_fast(c_pos)
+        return self.query_fast(_as_coord(pos))
 
 cdef class ChainFile():
     cdef dict targets
@@ -137,20 +146,22 @@ cdef class ChainFile():
         '''
         return self.lookup.get(contig, self.missing_target)
 
-    def query(self, str chrom, int64_t pos):
+    def query(self, str chrom, pos):
         '''  find the coordinate matches for a genome position
         '''
+        cdef int64_t c_pos = _as_coord(pos)
         cdef PyTarget tgt = <PyTarget>self.lookup.get(chrom)
         if tgt is not None:
-            return tgt.query_fast(pos)
+            return tgt.query_fast(c_pos)
         return []
 
-    def convert_coordinate(self, str chrom, int64_t pos):
+    def convert_coordinate(self, str chrom, pos):
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''
+        cdef int64_t c_pos = _as_coord(pos)
         cdef PyTarget tgt = <PyTarget>self.lookup.get(chrom)
         if tgt is not None:
-            return tgt.query_fast(pos)
+            return tgt.query_fast(c_pos)
         return []
 
     def __contains__(self, contig):
