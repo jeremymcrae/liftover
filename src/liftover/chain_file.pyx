@@ -1,4 +1,4 @@
-# cython: language_level=3, boundscheck=False, emit_linenums=True
+# cython: language_level=3, boundscheck=False, wraparound=False, emit_linenums=True
 
 import os
 
@@ -35,6 +35,9 @@ cdef extern from 'chain_file.h' namespace 'liftover':
 
   ChainFileResult open_chainfile(int &, const string &, bool) except+
 
+cdef str STRAND_PLUS = '+'
+cdef str STRAND_MINUS = '-'
+
 cdef inline int64_t _as_coord(object pos) except? -1:
     if PyLong_CheckExact(pos):
         return PyLong_AsLongLong(pos)
@@ -47,12 +50,8 @@ cdef class PyTarget():
     '''
     cdef Target thisptr
     cdef list query_contigs
-    cdef str strand_plus
-    cdef str strand_minus
 
     def __cinit__(self):
-        self.strand_plus = '+'
-        self.strand_minus = '-'
         self.query_contigs = []
 
     cdef set_target(self, Target & target, list query_contigs):
@@ -67,7 +66,7 @@ cdef class PyTarget():
         # optimization for the most common cases
         if n == 1:
             x = cpp_matches.inline_matches[0]
-            return [(<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus)]
+            return [(<str>self.query_contigs[x.query_id_idx], x.pos, STRAND_PLUS if x.fwd_strand else STRAND_MINUS)]
 
         if n == 0:
             return []
@@ -76,7 +75,7 @@ cdef class PyTarget():
         cdef size_t i
         for i in range(n):
             x = cpp_matches[i]
-            matches.append((<str>self.query_contigs[x.query_id_idx], x.pos, self.strand_plus if x.fwd_strand else self.strand_minus))
+            matches.append((<str>self.query_contigs[x.query_id_idx], x.pos, STRAND_PLUS if x.fwd_strand else STRAND_MINUS))
         return matches
 
     def __getitem__(self, pos):
@@ -113,7 +112,6 @@ class for converting coordinates between genome builds
         # dictionary, as accessing this is much faster than converting the
         # c++ Target object each time we query in a chromosome.
         self.targets = {}
-        self.lookup = {}
         cdef ChainFileResult res
         try:
             res = open_chainfile(fd, self.path.encode('utf8'), one_based)
@@ -134,11 +132,8 @@ class for converting coordinates between genome builds
             self.targets[chrom] = tgt
             inc(it)
 
-        # Build fast lookup dictionary: exact keys first
-        for chrom, tgt in self.targets.items():
-            self.lookup[chrom] = tgt
-
-        # Add alternate prefix keys (e.g. '1' -> 'chr1' target, or 'chr1' -> '1' target)
+        # Build fast lookup dictionary: exact keys first, then alternate chr-prefix keys
+        self.lookup = dict(self.targets)
         for chrom, tgt in self.targets.items():
             alt = chrom[3:] if chrom.startswith('chr') else f'chr{chrom}'
             if alt not in self.lookup:
@@ -167,23 +162,22 @@ class for converting coordinates between genome builds
         '''
         return self.lookup.get(contig, self.missing_target)
 
-    def query(self, str chrom, pos):
-        '''  find the coordinate matches for a genome position
-        '''
+    cdef inline list _query_chrom(self, str chrom, object pos):
         cdef int64_t c_pos = _as_coord(pos)
         cdef PyTarget tgt = <PyTarget>self.lookup.get(chrom)
         if tgt is not None:
             return tgt.query_fast(c_pos)
         return []
 
+    def query(self, str chrom, pos):
+        '''  find the coordinate matches for a genome position
+        '''
+        return self._query_chrom(chrom, pos)
+
     def convert_coordinate(self, str chrom, pos):
         '''  find the coordinate matches for a genome position (from pyliftover API)
         '''
-        cdef int64_t c_pos = _as_coord(pos)
-        cdef PyTarget tgt = <PyTarget>self.lookup.get(chrom)
-        if tgt is not None:
-            return tgt.query_fast(c_pos)
-        return []
+        return self._query_chrom(chrom, pos)
 
     def __contains__(self, contig):
         ''' check whether a contig is present in the chain file
