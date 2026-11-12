@@ -30,7 +30,11 @@ class GzReader {
   int buf_len = 0;
   int buf_pos = 0;
 public:
-  explicit GzReader(const char *path) : file(gzopen(path, "rb")), path(path) {}
+  explicit GzReader(const char *path) : file(gzopen(path, "rb")), path(path) {
+    if (file) {
+      gzbuffer(file, 65536);
+    }
+  }
   ~GzReader() {
     if (file) {
       gzclose(file);
