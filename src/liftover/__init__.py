@@ -1,9 +1,6 @@
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import version
 
-try:
-    __version__ = version('liftover')
-except PackageNotFoundError:
-    __version__ = 'unknown'
+__version__ = version('liftover')
 
 from liftover.lifter import get_lifter, default_cache_dir
 from liftover.chain_file import ChainFile, PyTarget
