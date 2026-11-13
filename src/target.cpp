@@ -16,10 +16,7 @@ Target::Target(std::vector<Interval> ivals, bool _one_based)
     return a.start < b.start;
   };
   if (!std::is_sorted(intervals.begin(), intervals.end(), by_start)) {
-    std::sort(intervals.begin(), intervals.end(),
-              [](const Interval & a, const Interval & b) {
-                return a.start != b.start ? a.start < b.start : a.stop < b.stop;
-              });
+    std::stable_sort(intervals.begin(), intervals.end(), by_start);
   }
 
   // Only build the augmented max_stops tree if at least two intervals overlap;
@@ -63,15 +60,17 @@ inline Match Target::remap(const Interval & region, std::int64_t pos) const {
 }
 
 // In-order traversal of the implicit interval tree over intervals[low..high)
-// collecting all intervals that contain pos.
-void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, std::vector<Match> & matches) const {
+// collecting all intervals that contain pos. The first hit is written to `first`
+// and any additional hits are appended to `extra`.
+void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t pos,
+                               Match & first, std::vector<Match> & extra, std::size_t & count) const {
   std::size_t mid = low + (high - low) / 2;
   // Prune the entire subtree if no interval in [low..high) extends past pos.
   if (pos >= max_stops[mid]) {
     return;
   }
   if (low < mid) {
-    query_overlapping(low, mid, pos, matches);
+    query_overlapping(low, mid, pos, first, extra, count);
   }
   const Interval & region = intervals[mid];
   // Because intervals are sorted by start, if region starts after pos then neither
@@ -80,45 +79,55 @@ void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t p
     return;
   }
   if (pos < region.stop) {
-    matches.push_back(remap(region, pos));
+    Match m = remap(region, pos);
+    if (count == 0) {
+      first = m;
+    } else {
+      extra.push_back(m);
+    }
+    ++count;
   }
   if (mid + 1 < high) {
-    query_overlapping(mid + 1, high, pos, matches);
+    query_overlapping(mid + 1, high, pos, first, extra, count);
   }
 }
 
-void Target::query(std::int64_t pos, std::vector<Match> & matches) const {
-  matches.clear();
-
+std::size_t Target::query(std::int64_t pos, Match & first, std::vector<Match> & extra) const {
   // Chain intervals are stored in 0-based half-open coordinates; shift 1-based queries
   // down before lookup and reject out-of-range negative coordinates early.
   if (one_based) {
     if (pos < 1) {
-      return;
+      return 0;
     }
     pos -= 1;
   } else if (pos < 0) {
-    return;
+    return 0;
   }
 
   if (intervals.empty() || pos < intervals.front().start) {
-    return;
+    return 0;
   }
 
   // Fast path for non-overlapping intervals: only the last interval with start <= pos
-  // can contain pos.
+  // can contain pos, so `extra` never needs to allocate.
   if (max_stops.empty()) {
     auto it = std::upper_bound(
       intervals.begin(), intervals.end(), pos,
       [](std::int64_t p, const Interval & iv) { return p < iv.start; });
     --it;
     if (pos < it->stop) {
-      matches.push_back(remap(*it, pos));
+      first = remap(*it, pos);
+      return 1;
     }
-    return;
+    return 0;
   }
 
-  query_overlapping(0, intervals.size(), pos, matches);
+  if (!extra.empty()) {
+    extra.clear();
+  }
+  std::size_t count = 0;
+  query_overlapping(0, intervals.size(), pos, first, extra, count);
+  return count;
 }
 
 } //namespace

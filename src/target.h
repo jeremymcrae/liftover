@@ -26,7 +26,8 @@ class Target {
   bool one_based = false;
 
   std::int64_t build_max_stops(std::size_t low, std::size_t high);
-  void query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, std::vector<Match> & matches) const;
+  void query_overlapping(std::size_t low, std::size_t high, std::int64_t pos,
+                         Match & first, std::vector<Match> & extra, std::size_t & count) const;
   Match remap(const Interval & region, std::int64_t pos) const;
 public:
   Target(std::vector<Interval> ivals, bool _one_based = false);
@@ -36,7 +37,7 @@ public:
     max_stops.swap(other.max_stops);
     std::swap(one_based, other.one_based);
   }
-  void query(std::int64_t pos, std::vector<Match> & matches) const;
+  std::size_t query(std::int64_t pos, Match & first, std::vector<Match> & extra) const;
 };
 
 } //namespace

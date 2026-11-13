@@ -963,5 +963,32 @@ class TestChainFile(unittest.TestCase):
             dl_mock2.assert_not_called()
             self.assertEqual(lifter2['chr1'][5], [('chrA', 15, '+')])
 
+    def test_concurrent_thread_queries(self):
+        ''' check concurrent queries on a shared ChainFile across threads return consistent results
+        '''
+        from concurrent.futures import ThreadPoolExecutor
+
+        lines = [
+            f'chain 0 chr1 100 + 10 30 chrQ{i} 1000 + {100 * (i + 1)} {100 * (i + 1) + 20} {i + 1}\n20\n\n'
+            for i in range(4)
+        ] + ['chain 0 chr2 100 + 0 50 chrSingle 100 + 10 60 5\n50\n\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, 'threads.chain.gz')
+            with gzip.open(path, 'wt') as h:
+                h.writelines(lines)
+
+            cf = ChainFile(path)
+            expected_multi = [(f'chrQ{i}', 100 * (i + 1) + 5, '+') for i in range(4)]
+
+            def worker(tid: int) -> None:
+                for _ in range(500):
+                    self.assertEqual(cf['chr1'][15], expected_multi)
+                    self.assertEqual(cf['chr1'][5], [])
+                    self.assertEqual(cf['chr2'][tid % 50], [('chrSingle', 10 + (tid % 50), '+')])
+
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                list(pool.map(worker, range(8)))
+
 
 
