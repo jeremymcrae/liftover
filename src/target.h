@@ -34,10 +34,6 @@ class Target {
 public:
   Target(std::vector<Interval> ivals, bool _one_based = false);
   Target() = default;
-  Target(Target&&) = default;
-  Target& operator=(Target&&) = default;
-  Target(const Target&) = default;
-  Target& operator=(const Target&) = default;
   void swap(Target & other) noexcept {
     intervals.swap(other.intervals);
     max_stops.swap(other.max_stops);

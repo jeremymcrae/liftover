@@ -11,45 +11,26 @@ Target::Target(std::vector<Interval> ivals, bool _one_based)
     return;
   }
 
-  bool sorted = true;
-  bool has_overlaps = false;
-  std::int64_t prev_start = intervals[0].start;
-  std::int64_t max_stop = intervals[0].stop;
-  for (std::size_t i = 1; i < intervals.size(); ++i) {
-    if (intervals[i].start < prev_start) {
-      sorted = false;
-      break;
-    }
-    if (intervals[i].start < max_stop) {
-      has_overlaps = true;
-    }
-    prev_start = intervals[i].start;
-    if (intervals[i].stop > max_stop) {
-      max_stop = intervals[i].stop;
-    }
-  }
-
-  if (!sorted) {
+  auto by_start = [](const Interval & a, const Interval & b) {
+    return a.start < b.start;
+  };
+  if (!std::is_sorted(intervals.begin(), intervals.end(), by_start)) {
     std::sort(intervals.begin(), intervals.end(),
               [](const Interval & a, const Interval & b) {
                 return a.start != b.start ? a.start < b.start : a.stop < b.stop;
               });
-    has_overlaps = false;
-    max_stop = intervals[0].stop;
-    for (std::size_t i = 1; i < intervals.size(); ++i) {
-      if (intervals[i].start < max_stop) {
-        has_overlaps = true;
-        break;
-      }
-      if (intervals[i].stop > max_stop) {
-        max_stop = intervals[i].stop;
-      }
-    }
   }
 
-  if (has_overlaps) {
-    max_stops.resize(intervals.size());
-    build_max_stops(0, intervals.size());
+  std::int64_t max_stop = intervals[0].stop;
+  for (std::size_t i = 1; i < intervals.size(); ++i) {
+    if (intervals[i].start < max_stop) {
+      max_stops.resize(intervals.size());
+      build_max_stops(0, intervals.size());
+      break;
+    }
+    if (intervals[i].stop > max_stop) {
+      max_stop = intervals[i].stop;
+    }
   }
 }
 
