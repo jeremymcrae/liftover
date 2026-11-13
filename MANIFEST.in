@@ -16,3 +16,4 @@ include src/zlib/inffast.c
 include src/zlib/inflate.c
 include src/zlib/inftrees.c
 include src/zlib/zutil.c
+prune tests
