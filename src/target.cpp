@@ -67,13 +67,12 @@ std::int64_t Target::build_max_stops(std::size_t low, std::size_t high) {
 }
 
 inline Match Target::remap(const Interval & region, std::int64_t pos) const {
-  const Mapped & mapped = region.value;
   std::int64_t offset = pos - region.start;
-  std::int64_t remapped = mapped.fwd_strand ? mapped.start + offset : mapped.start - offset;
+  std::int64_t remapped = region.fwd_strand ? region.mapped_start + offset : region.mapped_start - offset;
   if (one_based) {
     remapped += 1;
   }
-  return Match {remapped, mapped.query_id_idx, mapped.fwd_strand};
+  return Match {remapped, region.query_id_idx, region.fwd_strand};
 }
 
 void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, std::vector<Match> & matches) const {

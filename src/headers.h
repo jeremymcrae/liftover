@@ -10,9 +10,7 @@ namespace liftover {
 
 struct ChainHeader {
   // hold parsed header data for a single chain
-  std::int64_t score;
   std::string target_id;
-  std::int64_t target_size;
   std::int64_t target_start;
   std::int64_t target_end;
   std::string query_id;

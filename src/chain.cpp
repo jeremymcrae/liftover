@@ -75,8 +75,7 @@ void Chain::add_line(const std::string & line) {
   }
   
   std::int64_t mapped_start = fwd_strand ? query : query_size - 1 - query;
-  Mapped data = Mapped {mapped_start, query_id_idx, fwd_strand};
-  dest->push_back(Interval {target, target + size, data});
+  dest->push_back(Interval {target, target + size, mapped_start, query_id_idx, fwd_strand});
   
   target += size + target_gap;
   query += size + query_gap;

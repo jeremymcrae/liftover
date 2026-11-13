@@ -10,20 +10,15 @@
 
 namespace liftover {
 
-struct Mapped {
-  // holds where a liftover region maps across to. For reverse-strand chains,
-  // start is precomputed as (query_size - 1 - query_start) so queries only
-  // add or subtract the offset without storing query_size per interval.
-  std::int64_t start;
-  std::uint32_t query_id_idx;
-  bool fwd_strand;
-};
-
 struct Interval {
-  // half-open target interval [start, stop)
+  // half-open target interval [start, stop) and its mapped query origin.
+  // For reverse-strand chains, mapped_start is precomputed as
+  // (query_size - 1 - query_start) so queries only add or subtract the offset.
   std::int64_t start;
   std::int64_t stop;
-  Mapped value;
+  std::int64_t mapped_start;
+  std::uint32_t query_id_idx;
+  bool fwd_strand;
 };
 
 class Chain {

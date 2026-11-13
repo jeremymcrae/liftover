@@ -60,8 +60,8 @@ ChainHeader process_header(const std::string & line) {
     throw std::invalid_argument("invalid header line: " + line);
   }
 
-  std::int64_t score = parse_header_int(hdr[1], line, std::numeric_limits<std::int64_t>::min());
-  std::int64_t target_size = parse_header_int(hdr[3], line);
+  (void)parse_header_int(hdr[1], line, std::numeric_limits<std::int64_t>::min());
+  (void)parse_header_int(hdr[3], line);
   std::int64_t target_start = parse_header_int(hdr[5], line);
   std::int64_t target_end = parse_header_int(hdr[6], line);
   std::int64_t query_size = parse_header_int(hdr[8], line);
@@ -86,9 +86,7 @@ ChainHeader process_header(const std::string & line) {
   }
 
   return ChainHeader {
-    score,
     std::string(hdr[2].ptr, hdr[2].len),
-    target_size,
     target_start,
     target_end,
     std::string(hdr[7].ptr, hdr[7].len),
