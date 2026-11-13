@@ -563,10 +563,10 @@ class TestInvalidChainFile(unittest.TestCase):
             self.assertEqual(chain['chr2'][6], [('chrB', 26, '+')])
 
     def test_chain_file_float_scores(self):
-        ''' check valid floating-point header scores are accepted and non-finite/malformed scores fail
+        ''' check valid floating-point header scores are accepted and non-numeric/malformed scores fail
         '''
-        valid_scores = ['0.0', '4900.5', '-12.75', '.5', '5.', '1.5e9', '2.5E-4', '1e-400', str(2**64)]
-        invalid_scores = ['nan', 'NaN', 'inf', '-inf', 'Infinity', '1e500', '-1e500', '0x1p2', '.', '1e', '1.2.3', '49,5', 'abc']
+        valid_scores = ['0.0', '4900.5', '-12.75', '.5', '5.', '1.5e9', '2.5E-4', '1e-400', '1e500', '-1e500', str(2**64)]
+        invalid_scores = ['nan', 'NaN', 'inf', '-inf', 'Infinity', '0x1p2', '.', '1e', '1.2.3', '49,5', 'abc']
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             for s in valid_scores:
