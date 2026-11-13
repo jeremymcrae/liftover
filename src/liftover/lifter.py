@@ -15,6 +15,9 @@ def default_cache_dir() -> str:
         base = os.environ.get('XDG_CACHE_HOME', '').strip() or os.path.expanduser('~/.cache')
     return os.path.normpath(os.path.join(base, 'liftover'))
 
+def _is_nonempty_file(path: str) -> bool:
+    return os.path.isfile(path) and os.path.getsize(path) > 0
+
 def get_lifter(target: str | os.PathLike[str],
                query: str | None=None,
                cache: str | os.PathLike[str] | None=None,
@@ -82,12 +85,12 @@ def get_lifter(target: str | os.PathLike[str],
         chain_path = os.path.join(cache, basename)
 
         # Check legacy ~/.liftover cache as fallback if using default cache location
-        if using_default_cache and not os.path.exists(chain_path):
+        if using_default_cache and not _is_nonempty_file(chain_path):
             legacy_path = os.path.join(os.path.expanduser('~/.liftover'), basename)
-            if os.path.exists(legacy_path) and os.path.getsize(legacy_path) > 0:
+            if _is_nonempty_file(legacy_path):
                 chain_path = legacy_path
 
-        if not os.path.exists(chain_path):
+        if not _is_nonempty_file(chain_path):
             os.makedirs(cache, exist_ok=True)
             # if the chain file doesn't exist, download it
             server = chain_server.rstrip('/')

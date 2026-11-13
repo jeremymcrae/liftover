@@ -890,5 +890,49 @@ class TestChainFile(unittest.TestCase):
             with self.assertRaises(TypeError):
                 cf.convert_coordinate('chr1', 5, None)
 
+    def test_get_lifter_zero_byte_cached_file(self):
+        ''' check a 0-byte file in primary cache triggers fallback or re-download
+        '''
+        from unittest.mock import patch
+
+        lines = ['chain 0 chr1 100 + 0 10 chrA 100 + 10 20 1\n10\n\n']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # 1. Explicit cache with 0-byte file re-downloads
+            cache_dir = os.path.join(tmp_dir, 'cache')
+            os.makedirs(cache_dir)
+            empty_cached = os.path.join(cache_dir, 'hg19ToHg38.over.chain.gz')
+            open(empty_cached, 'wb').close()
+
+            def fake_download(url, dest):
+                with gzip.open(dest, 'wt') as h:
+                    h.writelines(lines)
+
+            with patch('liftover.lifter.download_file', side_effect=fake_download) as dl_mock:
+                lifter = get_lifter('hg19', 'hg38', cache=cache_dir)
+            dl_mock.assert_called_once()
+            self.assertEqual(lifter['chr1'][5], [('chrA', 15, '+')])
+
+            # 2. Default cache with 0-byte file falls back to non-empty legacy cache
+            new_cache = os.path.join(tmp_dir, 'new_cache')
+            os.makedirs(new_cache)
+            open(os.path.join(new_cache, 'hg19ToHg38.over.chain.gz'), 'wb').close()
+
+            legacy_dir = os.path.join(tmp_dir, 'legacy')
+            os.makedirs(legacy_dir)
+            with gzip.open(os.path.join(legacy_dir, 'hg19ToHg38.over.chain.gz'), 'wt') as h:
+                h.writelines(lines)
+
+            real_expanduser = os.path.expanduser
+            def fake_expanduser(p):
+                return legacy_dir if p == '~/.liftover' else real_expanduser(p)
+
+            with patch('liftover.lifter.default_cache_dir', return_value=new_cache), \
+                 patch('os.path.expanduser', side_effect=fake_expanduser), \
+                 patch('liftover.lifter.download_file') as dl_mock2:
+                lifter2 = get_lifter('hg19', 'hg38')
+            dl_mock2.assert_not_called()
+            self.assertEqual(lifter2['chr1'][5], [('chrA', 15, '+')])
+
 
 
