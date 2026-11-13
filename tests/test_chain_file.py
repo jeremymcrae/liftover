@@ -765,7 +765,7 @@ class TestChainFile(unittest.TestCase):
                 dest = os.path.join(tmp_dir, 'test.chain.gz')
                 with self.assertRaises(ValueError) as ctx:
                     download_file('https://example.com/f.gz', dest)
-                self.assertIn('problem downloading', str(ctx.exception))
+                self.assertIn('problem accessing', str(ctx.exception))
                 self.assertEqual(os.listdir(tmp_dir), [])
 
         # 2. Non-200 HTTP status includes status code
