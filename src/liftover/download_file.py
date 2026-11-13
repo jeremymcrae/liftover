@@ -59,7 +59,7 @@ def download_file(url: str, path: str, timeout: float | urllib3.Timeout = 30.0) 
     except BaseException as e:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
-        if isinstance(e, Exception) and not isinstance(e, ValueError):
+        if isinstance(e, urllib3.exceptions.HTTPError):
             raise ValueError(f'problem accessing {url}: {e}') from e
         raise
     finally:

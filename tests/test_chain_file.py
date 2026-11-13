@@ -819,6 +819,20 @@ class TestChainFile(unittest.TestCase):
                 download_file('https://example.com/f.chain', dest)
                 self.assertTrue(os.path.exists(dest))
 
+        # 5. Local OSError (e.g. missing destination directory) propagates without being masked as ValueError
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_resp.stream.return_value = [b'data']
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                missing_dest = os.path.join(tmp_dir, 'nonexistent_dir', 'test.chain')
+                with self.assertRaises(FileNotFoundError):
+                    download_file('https://example.com/f.chain', missing_dest)
+
     def test_path_validation_and_tilde_expansion(self):
         ''' check os.fspath validation, ~ expansion, and build name path-traversal rejection
         '''
