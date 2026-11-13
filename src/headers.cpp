@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <clocale>
+#include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
@@ -44,6 +48,63 @@ inline std::int64_t parse_header_int(const Token & tok, const std::string & line
   return val;
 }
 
+// Validate the chain score token, which UCSC defines as a double (usually integer-formatted).
+inline void validate_header_score(const Token & tok, const std::string & line) {
+  const char * ptr = tok.ptr;
+  std::int64_t int_val = 0;
+  if (parse_int64(ptr, int_val, std::numeric_limits<std::int64_t>::min()) && ptr == tok.ptr + tok.len) {
+    return;
+  }
+
+  // Fallback for decimal or scientific-notation scores (rejecting hex floats, inf, and nan).
+  const char * p = tok.ptr;
+  const char * end = p + tok.len;
+  if (p < end && (*p == '+' || *p == '-')) {
+    ++p;
+  }
+  std::size_t digits = 0;
+  while (p < end && *p >= '0' && *p <= '9') {
+    ++p;
+    ++digits;
+  }
+  if (p < end && *p == '.') {
+    ++p;
+    while (p < end && *p >= '0' && *p <= '9') {
+      ++p;
+      ++digits;
+    }
+  }
+  if (digits == 0) {
+    throw std::invalid_argument("invalid header line: " + line);
+  }
+  if (p < end && (*p == 'e' || *p == 'E')) {
+    ++p;
+    if (p < end && (*p == '+' || *p == '-')) {
+      ++p;
+    }
+    if (p == end || *p < '0' || *p > '9') {
+      throw std::invalid_argument("invalid header line: " + line);
+    }
+    while (p < end && *p >= '0' && *p <= '9') {
+      ++p;
+    }
+  }
+  if (p != end) {
+    throw std::invalid_argument("invalid header line: " + line);
+  }
+
+  std::string buf(tok.ptr, tok.len);
+  char radix = std::localeconv()->decimal_point[0];
+  if (radix != '.') {
+    std::replace(buf.begin(), buf.end(), '.', radix);
+  }
+  char * stop = nullptr;
+  double val = std::strtod(buf.c_str(), &stop);
+  if (!std::isfinite(val) || stop != buf.c_str() + buf.size()) {
+    throw std::invalid_argument("invalid header line: " + line);
+  }
+}
+
 } // namespace
 
 ChainHeader process_header(const std::string & line) {
@@ -65,7 +126,7 @@ ChainHeader process_header(const std::string & line) {
   }
 
   // Validate score and target_size even though Chain does not need to store them.
-  (void)parse_header_int(hdr[1], line, std::numeric_limits<std::int64_t>::min());
+  validate_header_score(hdr[1], line);
   (void)parse_header_int(hdr[3], line);
   std::int64_t target_start = parse_header_int(hdr[5], line);
   std::int64_t target_end = parse_header_int(hdr[6], line);

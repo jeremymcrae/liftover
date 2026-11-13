@@ -237,12 +237,12 @@ class TestInvalidChainFile(unittest.TestCase):
             self.assertEqual(mapped[0][1], large - 40 + 5)
 
     def test_invalid_chain_file_header_overflow(self):
-        ''' check header number exceeding 64-bit integer raises ValueError
+        ''' check header coordinate exceeding 64-bit integer raises ValueError
         '''
         with tempfile.TemporaryDirectory() as tmp_dir:
-            for bad_score in [2**63, -2**63 - 1, 2**64]:
+            for bad_coord in [2**63, 2**64]:
                 path = os.path.join(tmp_dir, 'bad.chain.gz')
-                lines = [f'chain {bad_score} chr1 10 + 0 10 chr1 10 + 0 10 2\n',
+                lines = [f'chain 0 chr1 {bad_coord} + 0 10 chr1 {bad_coord} + 0 10 2\n',
                          '10\n\n']
                 with gzip.open(path, 'wt') as handle:
                     handle.writelines(lines)
@@ -561,5 +561,27 @@ class TestInvalidChainFile(unittest.TestCase):
             chain = ChainFile(path)
             self.assertEqual(chain['chr1'][6], [('chrA', 16, '+')])
             self.assertEqual(chain['chr2'][6], [('chrB', 26, '+')])
+
+    def test_chain_file_float_scores(self):
+        ''' check valid floating-point header scores are accepted and non-finite/malformed scores fail
+        '''
+        valid_scores = ['0.0', '4900.5', '-12.75', '.5', '5.', '1.5e9', '2.5E-4', '1e-400', str(2**64)]
+        invalid_scores = ['nan', 'NaN', 'inf', '-inf', 'Infinity', '1e500', '-1e500', '0x1p2', '.', '1e', '1.2.3', '49,5', 'abc']
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for s in valid_scores:
+                path = os.path.join(tmp_dir, 'valid_score.chain.gz')
+                with gzip.open(path, 'wt') as h:
+                    h.write(f'chain {s} chr1 10 + 0 10 chrA 30 + 10 20 1\n10\n\n')
+                cf = ChainFile(path)
+                self.assertEqual(cf['chr1'][5], [('chrA', 15, '+')])
+
+            for s in invalid_scores:
+                path = os.path.join(tmp_dir, 'invalid_score.chain.gz')
+                with gzip.open(path, 'wt') as h:
+                    h.write(f'chain {s} chr1 10 + 0 10 chrA 30 + 10 20 1\n10\n\n')
+                with self.assertRaises(ValueError) as ctx:
+                    ChainFile(path)
+                self.assertIn('invalid header line', str(ctx.exception))
 
 
