@@ -16,7 +16,6 @@ struct ChainFileResult {
 };
 
 ChainFileResult open_chainfile(int & fd, const std::string & path, bool one_based=false);
-ChainFileResult open_chainfile(const std::string & path, bool one_based=false);
 
 }
 

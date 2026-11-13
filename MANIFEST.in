@@ -6,7 +6,7 @@ include src/liftover/py.typed
 # cython generates these while building, so a copy here could be stale
 exclude src/liftover/*.cpp
 include src/*.h
-include src/chain.cpp src/chain_file.cpp src/headers.cpp src/target.cpp
+include src/*.cpp
 include src/zlib/*.h
 include src/zlib/adler32.c
 include src/zlib/crc32.c

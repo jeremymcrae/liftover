@@ -21,11 +21,6 @@ public:
       gzbuffer(file, 65536);
     }
   }
-  explicit GzReader(const std::string & path) : file(gzopen(path.c_str(), "rb")), path(path) {
-    if (file) {
-      gzbuffer(file, 65536);
-    }
-  }
   GzReader(const GzReader &) = delete;
   GzReader & operator=(const GzReader &) = delete;
   ~GzReader() {
@@ -65,9 +60,10 @@ public:
   }
 };
 
-static ChainFileResult parse_chainfile(GzReader & infile, const std::string & path, bool one_based) {
-  /* parse a liftover chain stream into per-chromosome Target interval indexes
+ChainFileResult open_chainfile(int & fd, const std::string & path, bool one_based) {
+  /* open a liftover chain descriptor and index intervals per chromosome
   */
+  GzReader infile(fd, path);
   if (!infile.is_open()) {
     throw std::invalid_argument("cannot open chain file at " + path);
   }
@@ -125,16 +121,6 @@ static ChainFileResult parse_chainfile(GzReader & infile, const std::string & pa
     targets.emplace(x.first, Target(std::move(x.second), one_based));
   }
   return ChainFileResult {std::move(targets), std::move(query_names)};
-}
-
-ChainFileResult open_chainfile(int & fd, const std::string & path, bool one_based) {
-  GzReader infile(fd, path);
-  return parse_chainfile(infile, path, one_based);
-}
-
-ChainFileResult open_chainfile(const std::string & path, bool one_based) {
-  GzReader infile(path);
-  return parse_chainfile(infile, path, one_based);
 }
 
 } //namespace
