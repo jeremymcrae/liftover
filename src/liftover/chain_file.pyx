@@ -18,14 +18,9 @@ cdef extern from 'target.h' namespace 'liftover':
     uint32_t query_id_idx
     bool fwd_strand
 
-  cdef cppclass MatchBuffer:
-    Match inline_matches[4]
-    size_t size() const
-    const Match & operator[](size_t) const
-
   cdef cppclass Target:
     Target() except +
-    void query(int64_t, MatchBuffer &) const
+    void query(int64_t, vector[Match] &) const
     void swap(Target &)
 
 cdef extern from 'chain_file.h' namespace 'liftover':
@@ -49,6 +44,7 @@ cdef class PyTarget():
     ''' class to hold cpp object for nucleotide position queries
     '''
     cdef Target thisptr
+    cdef vector[Match] match_buf
     cdef list query_contigs
 
     def __cinit__(self):
@@ -59,13 +55,12 @@ cdef class PyTarget():
         self.query_contigs = query_contigs
 
     cdef list query_fast(self, int64_t pos):
-        cdef MatchBuffer cpp_matches
-        self.thisptr.query(pos, cpp_matches)
-        cdef size_t n = cpp_matches.size()
+        self.thisptr.query(pos, self.match_buf)
+        cdef size_t n = self.match_buf.size()
         cdef Match x
         # optimization for the most common cases
         if n == 1:
-            x = cpp_matches.inline_matches[0]
+            x = self.match_buf[0]
             return [(<str>self.query_contigs[x.query_id_idx], x.pos, STRAND_PLUS if x.fwd_strand else STRAND_MINUS)]
 
         if n == 0:
@@ -74,7 +69,7 @@ cdef class PyTarget():
         cdef list matches = []
         cdef size_t i
         for i in range(n):
-            x = cpp_matches[i]
+            x = self.match_buf[i]
             matches.append((<str>self.query_contigs[x.query_id_idx], x.pos, STRAND_PLUS if x.fwd_strand else STRAND_MINUS))
         return matches
 

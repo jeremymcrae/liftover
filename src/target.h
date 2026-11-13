@@ -16,37 +16,6 @@ struct Match {
   bool fwd_strand;
 };
 
-struct MatchBuffer {
-  // stack-friendly buffer avoiding heap allocation for typical (<= 4) matches
-  enum : std::size_t { INLINE_CAP = 4 };
-  Match inline_matches[INLINE_CAP];
-  std::vector<Match> extra;
-  std::size_t count = 0;
-
-  void clear() {
-    count = 0;
-    if (!extra.empty()) {
-      extra.clear();
-    }
-  }
-
-  void push_back(const Match & m) {
-    if (count < INLINE_CAP) {
-      inline_matches[count] = m;
-    } else {
-      extra.push_back(m);
-    }
-    ++count;
-  }
-
-  std::size_t size() const { return count; }
-  bool empty() const { return count == 0; }
-
-  const Match & operator[](std::size_t i) const {
-    return i < INLINE_CAP ? inline_matches[i] : extra[i - INLINE_CAP];
-  }
-};
-
 class Target {
   /* indexes the intervals for a single chromosome for fast point queries.
 
@@ -60,7 +29,7 @@ class Target {
   bool one_based = false;
 
   std::int64_t build_max_stops(std::size_t low, std::size_t high);
-  void query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, MatchBuffer & matches) const;
+  void query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, std::vector<Match> & matches) const;
   Match remap(const Interval & region, std::int64_t pos) const;
 public:
   Target(std::vector<Interval> ivals, bool _one_based = false);
@@ -74,9 +43,7 @@ public:
     max_stops.swap(other.max_stops);
     std::swap(one_based, other.one_based);
   }
-  void query(std::int64_t pos, MatchBuffer & matches) const;
-  std::vector<Match> query(std::int64_t pos) const;
-  std::vector<Match> operator[](std::int64_t pos) const { return query(pos); }
+  void query(std::int64_t pos, std::vector<Match> & matches) const;
 };
 
 } //namespace

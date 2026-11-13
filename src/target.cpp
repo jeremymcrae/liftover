@@ -76,7 +76,7 @@ inline Match Target::remap(const Interval & region, std::int64_t pos) const {
   return Match {remapped, mapped.query_id_idx, mapped.fwd_strand};
 }
 
-void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, MatchBuffer & matches) const {
+void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t pos, std::vector<Match> & matches) const {
   std::size_t mid = low + (high - low) / 2;
   if (pos >= max_stops[mid]) {
     return;
@@ -96,8 +96,8 @@ void Target::query_overlapping(std::size_t low, std::size_t high, std::int64_t p
   }
 }
 
-void Target::query(std::int64_t pos, MatchBuffer & matches) const {
-  /* find coordinates matching a specific site without heap allocation for <= 4 hits
+void Target::query(std::int64_t pos, std::vector<Match> & matches) const {
+  /* find coordinates matching a specific site, reusing the caller's vector capacity
   */
   matches.clear();
 
@@ -126,19 +126,6 @@ void Target::query(std::int64_t pos, MatchBuffer & matches) const {
   }
 
   query_overlapping(0, intervals.size(), pos, matches);
-}
-
-std::vector<Match> Target::query(std::int64_t pos) const {
-  MatchBuffer buf;
-  query(pos, buf);
-  std::vector<Match> matches;
-  if (!buf.empty()) {
-    matches.reserve(buf.size());
-    for (std::size_t i = 0; i < buf.size(); ++i) {
-      matches.push_back(buf[i]);
-    }
-  }
-  return matches;
 }
 
 } //namespace
