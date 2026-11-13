@@ -10,10 +10,10 @@
 
 namespace liftover {
 
+// Half-open target interval [start, stop) and its mapped query origin.
+// For reverse-strand chains, mapped_start is precomputed as
+// (query_size - 1 - query_start) so queries only add or subtract the offset.
 struct Interval {
-  // half-open target interval [start, stop) and its mapped query origin.
-  // For reverse-strand chains, mapped_start is precomputed as
-  // (query_size - 1 - query_start) so queries only add or subtract the offset.
   std::int64_t start;
   std::int64_t stop;
   std::int64_t mapped_start;
@@ -21,15 +21,15 @@ struct Interval {
   bool fwd_strand;
 };
 
+// Running cursor state while streaming alignment blocks for a single chain.
 class Chain {
-  // tracks state while parsing alignment lines for a single chain
-  std::vector<Interval> * dest = nullptr;
-  std::int64_t target = 0;
-  std::int64_t query = 0;
+  std::vector<Interval> * dest = nullptr;  // target chromosome's interval vector
+  std::int64_t target = 0;                 // current 0-based target position
+  std::int64_t query = 0;                  // current 0-based query position
   std::int64_t query_size = 0;
   std::int64_t target_end = 0;
   std::int64_t query_end = 0;
-  std::uint32_t query_id_idx = 0;
+  std::uint32_t query_id_idx = 0;          // index into ChainFileResult::query_names
   bool fwd_strand = true;
 public:
   Chain() = default;

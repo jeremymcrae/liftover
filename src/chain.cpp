@@ -5,31 +5,20 @@
 
 namespace liftover {
 
+// Parse an alignment block line: either "size dt dq" (ungapped block followed by
+// target and query gaps) or "size" on the final block of a chain.
 inline void parse(const std::string & line, std::int64_t & size, std::int64_t & target_gap, std::int64_t & query_gap) {
-  /* parse an alignment data line
-  
-  line: an alignment line e.g. '5000\t10\t5' or '5000' Most lines have 3 items
-    (size, reference delta, query delta), but the final line has only one (size).
-  */
   const char * ptr = line.c_str();
-  // parse the alignment block size (must be >= 1)
   if (!parse_int64(ptr, size, 1)) {
     throw std::invalid_argument("invalid alignment line: " + line);
   }
 
-  // skip any whitespace between items
   while (*ptr == ' ' || *ptr == '\t') {
     ptr++;
   }
 
   if (*ptr != '\0') {
-    // if there are more items, parse the target gap
-    if (!parse_int64(ptr, target_gap, 0)) {
-      throw std::invalid_argument("invalid alignment line: " + line);
-    }
-
-    // move on to the final item (query gap)
-    if (!parse_int64(ptr, query_gap, 0)) {
+    if (!parse_int64(ptr, target_gap, 0) || !parse_int64(ptr, query_gap, 0)) {
       throw std::invalid_argument("invalid alignment line: " + line);
     }
   } else {
@@ -45,6 +34,8 @@ Chain::Chain(const std::string & header_line,
   ChainHeader header = process_header(header_line);
   dest = &chrom_intervals[std::move(header.target_id)];
   target = header.target_start;
+
+  // Intern query contig names so each Interval stores a 32-bit index rather than a string.
   auto it = query_indices.find(header.query_id);
   if (it == query_indices.end()) {
     query_id_idx = static_cast<std::uint32_t>(query_names.size());
@@ -53,6 +44,7 @@ Chain::Chain(const std::string & header_line,
   } else {
     query_id_idx = it->second;
   }
+
   query = header.query_start;
   fwd_strand = header.fwd_strand;
   query_size = header.query_size;
@@ -61,27 +53,29 @@ Chain::Chain(const std::string & header_line,
 }
 
 void Chain::add_line(const std::string & line) {
-  /* append an alignment interval directly to the target chromosome's vector
-  */
   std::int64_t size = 0;
   std::int64_t target_gap = 0;
   std::int64_t query_gap = 0;
   parse(line, size, target_gap, query_gap);
+
+  // Check remaining span via subtraction so huge values cannot overflow int64_t.
   if (size > target_end - target || target_gap > target_end - target - size) {
     throw std::invalid_argument("target alignment exceeds header target_end: " + line);
   }
   if (size > query_end - query || query_gap > query_end - query - size) {
     throw std::invalid_argument("query alignment exceeds header query_end: " + line);
   }
-  
+
+  // On '-' strand, UCSC chain query coordinates count from the reverse-complement end,
+  // so target+offset maps to (query_size - 1 - query) - offset on the forward strand.
   std::int64_t mapped_start = fwd_strand ? query : query_size - 1 - query;
   dest->push_back(Interval {target, target + size, mapped_start, query_id_idx, fwd_strand});
-  
+
   target += size + target_gap;
   query += size + query_gap;
 }
 
-// check the chain is valid, once complete
+// Verify that the sum of alignment blocks and gaps matches the header's end coordinates.
 void Chain::validate() const {
   if (target != target_end) {
     throw std::invalid_argument("target end does not match expectations: " + std::to_string(target) + " != " + std::to_string(target_end));

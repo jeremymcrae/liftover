@@ -9,21 +9,18 @@
 
 namespace liftover {
 
+// Lifted query coordinate for a single matching chain interval.
 struct Match {
-  // hold info for a matched site after a successful query
   std::int64_t pos;
   std::uint32_t query_id_idx;
   bool fwd_strand;
 };
 
+// Per-chromosome interval index for fast point coordinate queries.
+// Intervals are sorted by start coordinate: disjoint contigs (all UCSC over.chain
+// contigs) use a single binary search, while contigs with overlapping chains also
+// populate max_stops as an implicit augmented binary search tree.
 class Target {
-  /* indexes the intervals for a single chromosome for fast point queries.
-
-  Intervals are stored in a flat vector sorted by start coordinate. When no
-  intervals on the chromosome overlap (true for all UCSC over.chain contigs),
-  queries run a single std::upper_bound binary search. When intervals overlap,
-  max_stops augments the array as an implicit midpoint interval tree.
-  */
   std::vector<Interval> intervals;
   std::vector<std::int64_t> max_stops;
   bool one_based = false;

@@ -8,6 +8,7 @@ namespace liftover {
 
 namespace {
 
+// Non-owning slice into the header line, avoiding per-field string allocations.
 struct Token {
   const char * ptr;
   std::size_t len;
@@ -17,6 +18,7 @@ inline bool is_ws(char c) {
   return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
+// Advance cursor to the next whitespace-delimited token; returns false at end of line.
 inline bool next_token(const char *& cursor, Token & tok) {
   while (is_ws(*cursor)) {
     ++cursor;
@@ -32,6 +34,7 @@ inline bool next_token(const char *& cursor, Token & tok) {
   return true;
 }
 
+// Parse an entire token as an int64 >= min_val, throwing on invalid or partial tokens.
 inline std::int64_t parse_header_int(const Token & tok, const std::string & line, std::int64_t min_val = 0) {
   const char * ptr = tok.ptr;
   std::int64_t val = 0;
@@ -44,8 +47,9 @@ inline std::int64_t parse_header_int(const Token & tok, const std::string & line
 } // namespace
 
 ChainHeader process_header(const std::string & line) {
-  /* parse a 13-field chain header in-place without intermediate string allocations
-  */
+  // UCSC chain header format (13 whitespace-separated fields):
+  //   0:chain  1:score  2:tName  3:tSize  4:tStrand  5:tStart  6:tEnd
+  //   7:qName  8:qSize  9:qStrand 10:qStart 11:qEnd 12:id
   Token hdr[13];
   const char * cursor = line.c_str();
   for (std::size_t i = 0; i < 13; ++i) {
@@ -60,6 +64,7 @@ ChainHeader process_header(const std::string & line) {
     throw std::invalid_argument("invalid header line: " + line);
   }
 
+  // Validate score and target_size even though Chain does not need to store them.
   (void)parse_header_int(hdr[1], line, std::numeric_limits<std::int64_t>::min());
   (void)parse_header_int(hdr[3], line);
   std::int64_t target_start = parse_header_int(hdr[5], line);
@@ -81,6 +86,8 @@ ChainHeader process_header(const std::string & line) {
   if (target_start > target_end || query_start > query_end) {
     throw std::invalid_argument("invalid header coordinates: " + line);
   }
+  // Reverse-strand query coordinates are measured from the end of query_size, so
+  // query_end > query_size would map positions to negative forward coordinates.
   if (!fwd_strand && query_end > query_size) {
     throw std::invalid_argument("invalid header coordinates: " + line);
   }

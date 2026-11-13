@@ -8,8 +8,8 @@
 
 namespace liftover {
 
+// Parsed fields from a UCSC chain header line needed to build a Chain.
 struct ChainHeader {
-  // hold parsed header data for a single chain
   std::string target_id;
   std::int64_t target_start;
   std::int64_t target_end;
