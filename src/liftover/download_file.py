@@ -74,7 +74,9 @@ def _stream_to_file(response: BaseHTTPResponse, dest_path: str, url: str) -> Non
             raise ValueError(f'problem downloading from {url}: {e}') from e
 
         headers = getattr(response, 'headers', None)
-        content_length = headers.get('Content-Length') if headers else None
+        encoding = (headers.get('Content-Encoding') or '').strip().lower() if headers else ''
+        was_decoded = (not is_gzip) and bool(encoding) and encoding != 'identity'
+        content_length = headers.get('Content-Length') if (headers and not was_decoded) else None
 
         verify_file(tmp_path, url, total_bytes, content_length, is_gzip=is_gzip)
         os.replace(tmp_path, dest_path)

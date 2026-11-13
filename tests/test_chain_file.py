@@ -804,6 +804,21 @@ class TestChainFile(unittest.TestCase):
                 mock_resp.stream.assert_called_once_with(65536, decode_content=False)
                 self.assertTrue(os.path.exists(dest))
 
+        # 4. Non-.gz download with Content-Encoding: gzip skips compressed Content-Length mismatch
+        with patch('urllib3.PoolManager') as mock_pm:
+            mock_pool = MagicMock()
+            mock_pm.return_value = mock_pool
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_resp.headers = {'Content-Length': '25', 'Content-Encoding': 'gzip'}
+            mock_resp.stream.return_value = [b'uncompressed body much longer than 25 bytes']
+            mock_pool.request.return_value = mock_resp
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                dest = os.path.join(tmp_dir, 'test.chain')
+                download_file('https://example.com/f.chain', dest)
+                self.assertTrue(os.path.exists(dest))
+
     def test_path_validation_and_tilde_expansion(self):
         ''' check os.fspath validation, ~ expansion, and build name path-traversal rejection
         '''
